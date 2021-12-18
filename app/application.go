@@ -5,10 +5,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/johannes-kuhfuss/jobsvc/config"
+	"github.com/johannes-kuhfuss/jobsvc/domain"
+	"github.com/johannes-kuhfuss/jobsvc/handler"
+	"github.com/johannes-kuhfuss/jobsvc/repositories"
+	"github.com/johannes-kuhfuss/jobsvc/service"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 )
 
-var appCfg config.AppConfig
+var (
+	appCfg     config.AppConfig
+	jobRepo    domain.JobRepository
+	jobService service.DefaultJobService
+	jobHandler handler.JobHandlers
+)
 
 func StartApp() {
 	logger.Info("Starting application")
@@ -17,6 +26,7 @@ func StartApp() {
 		panic(err)
 	}
 	initRouter()
+	wireApp()
 	mapUrls()
 	startRouter()
 	logger.Info("Application ended")
@@ -29,6 +39,14 @@ func initRouter() {
 	appCfg.RunTime.Router.Use(gin.Logger())
 	appCfg.RunTime.Router.Use(gin.Recovery())
 	appCfg.RunTime.Router.SetTrustedProxies(nil)
+}
+
+func wireApp() {
+	jobRepo = repositories.NewJobRepositoryMem()
+	jobService = service.NewJobService(jobRepo)
+	jobHandler = handler.JobHandlers{
+		Service: jobService,
+	}
 }
 
 func startRouter() {

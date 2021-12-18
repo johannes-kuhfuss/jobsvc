@@ -84,8 +84,9 @@ type JobStatusUpdate struct {
 
 type JobRepository interface {
 	Store(Job) api_error.ApiErr
+	FindAll(string) (*[]Job, api_error.ApiErr)
 	/*
-		FindAll(string) (*[]Job, api_error.ApiErr)
+
 		FindById(string) (*Job, api_error.ApiErr)
 		Search() (*[]Job, api_error.ApiErr)
 		Store(Job) api_error.ApiErr
