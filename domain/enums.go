@@ -11,11 +11,11 @@ type EnumItem struct {
 	index int
 	value string
 }
-type Enum struct {
+type EnumList struct {
 	items []EnumItem
 }
 
-func (e *Enum) Value(index int) (string, api_error.ApiErr) {
+func (e *EnumList) Value(index int) (string, api_error.ApiErr) {
 	for _, item := range e.items {
 		if item.index == index {
 			return item.value, nil
@@ -24,7 +24,7 @@ func (e *Enum) Value(index int) (string, api_error.ApiErr) {
 	return "", api_error.NewNotFoundError(fmt.Sprintf("No item with index %v found", index))
 }
 
-func (e *Enum) Index(value string) (int, api_error.ApiErr) {
+func (e *EnumList) Index(value string) (int, api_error.ApiErr) {
 	for index, item := range e.items {
 		if strings.EqualFold(value, item.value) {
 			return index, nil
@@ -33,7 +33,7 @@ func (e *Enum) Index(value string) (int, api_error.ApiErr) {
 	return 0, api_error.NewNotFoundError(fmt.Sprintf("No item with name %v found", value))
 }
 
-func (e *Enum) Values() []string {
+func (e *EnumList) Values() []string {
 	var names []string
 	for _, item := range e.items {
 		names = append(names, item.value)
@@ -41,7 +41,7 @@ func (e *Enum) Values() []string {
 	return names
 }
 
-func (e *Enum) AsMap() map[int]string {
+func (e *EnumList) AsMap() map[int]string {
 	m := make(map[int]string)
 	for _, item := range e.items {
 		m[item.index] = item.value
@@ -49,7 +49,7 @@ func (e *Enum) AsMap() map[int]string {
 	return m
 }
 
-func (e *Enum) FromMap(m map[int]string) {
+func (e *EnumList) FromMap(m map[int]string) {
 	var eItem EnumItem
 	for index, item := range m {
 		eItem.index = index

@@ -7,7 +7,7 @@ import (
 )
 
 func Test_Values_EmptyEnum_ReturnsNotFoundError(t *testing.T) {
-	var testEnum Enum
+	var testEnum EnumList
 	testIdx := 0
 	val, err := testEnum.Value(testIdx)
 	if val != "" {
@@ -25,8 +25,8 @@ func Test_Values_EmptyEnum_ReturnsNotFoundError(t *testing.T) {
 }
 
 /*
-func Test_Values_EmptyEnum_ReturnsNotFoundError(t *testing.T) {
-	var testEnum Enum
+func Test_A_Values_EmptyEnum_ReturnsNotFoundError(t *testing.T) {
+	var testEnum EnumList
 	testIdx := 0
 	_, err := testEnum.Value(testIdx)
 
