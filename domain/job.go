@@ -6,6 +6,17 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
+type JobStatus string
+
+const (
+	Created  JobStatus = "created"
+	Queued   JobStatus = "queued"
+	Running  JobStatus = "running"
+	Paused   JobStatus = "paused"
+	Finished JobStatus = "finihsed"
+	Failed   JobStatus = "failed"
+)
+
 type Job struct {
 	Id         ksuid.KSUID `db:"job_id"`
 	Name       string      `db:"name"`
