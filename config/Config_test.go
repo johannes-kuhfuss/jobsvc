@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
@@ -66,4 +67,22 @@ func Test_loadConfig_WithEnvFile_Returns_NoError(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.EqualValues(t, "debug", os.Getenv("GIN_MODE"))
+}
+
+func Test_InitConfig_NoEnvFile_Returns_Error(t *testing.T) {
+	err := InitConfig("file_does_not_exist.txt")
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Could not configure app, Check your environment variables", err.Message())
+}
+
+func Test_InitConfig_WithEnvFile_SetsValues(t *testing.T) {
+	writeTestEnv(testEnvFile)
+	defer deleteEnvFile(testEnvFile)
+	err := InitConfig(testEnvFile)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, "db_username", Cfg.Database.Username)
+	assert.EqualValues(t, "db_password", Cfg.Database.Password)
 }
