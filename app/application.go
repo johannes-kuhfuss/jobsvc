@@ -8,13 +8,11 @@ import (
 	"github.com/johannes-kuhfuss/services_utils/logger"
 )
 
-var (
-	router *gin.Engine
-)
+var appCfg config.AppConfig
 
 func StartApp() {
 	logger.Info("Starting application")
-	err := config.InitConfig(config.EnvFile)
+	err := config.InitConfig(config.EnvFile, &appCfg)
 	if err != nil {
 		panic(err)
 	}
@@ -25,18 +23,18 @@ func StartApp() {
 }
 
 func initRouter() {
-	gin.SetMode(config.Cfg.Gin.Mode)
+	gin.SetMode(appCfg.Gin.Mode)
 	gin.DefaultWriter = logger.GetLogger()
-	router = gin.New()
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
-	router.SetTrustedProxies(nil)
+	appCfg.RunTime.Router = gin.New()
+	appCfg.RunTime.Router.Use(gin.Logger())
+	appCfg.RunTime.Router.Use(gin.Recovery())
+	appCfg.RunTime.Router.SetTrustedProxies(nil)
 }
 
 func startRouter() {
-	listenAddr := fmt.Sprintf("%s:%s", config.Cfg.Server.Host, config.Cfg.Server.Port)
+	listenAddr := fmt.Sprintf("%s:%s", appCfg.Server.Host, appCfg.Server.Port)
 	logger.Info(fmt.Sprintf("Listening on %v", listenAddr))
-	if err := router.Run(listenAddr); err != nil {
+	if err := appCfg.RunTime.Router.Run(listenAddr); err != nil {
 		logger.Error("Error while starting router", err)
 		panic(err)
 	}

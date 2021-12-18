@@ -12,6 +12,7 @@ import (
 
 var (
 	testEnvFile string = ".testenv"
+	testConfig  AppConfig
 )
 
 func checkErr(err error) {
@@ -70,7 +71,7 @@ func Test_loadConfig_WithEnvFile_Returns_NoError(t *testing.T) {
 }
 
 func Test_InitConfig_NoEnvFile_Returns_Error(t *testing.T) {
-	err := InitConfig("file_does_not_exist.txt")
+	err := InitConfig("file_does_not_exist.txt", &testConfig)
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
@@ -80,9 +81,10 @@ func Test_InitConfig_NoEnvFile_Returns_Error(t *testing.T) {
 func Test_InitConfig_WithEnvFile_SetsValues(t *testing.T) {
 	writeTestEnv(testEnvFile)
 	defer deleteEnvFile(testEnvFile)
-	err := InitConfig(testEnvFile)
+	err := InitConfig(testEnvFile, &testConfig)
 
 	assert.Nil(t, err)
-	assert.EqualValues(t, "db_username", Cfg.Database.Username)
-	assert.EqualValues(t, "db_password", Cfg.Database.Password)
+	assert.EqualValues(t, "db_username", testConfig.Database.Username)
+	assert.EqualValues(t, "db_password", testConfig.Database.Password)
+	assert.EqualValues(t, false, testConfig.Server.Shutdown)
 }

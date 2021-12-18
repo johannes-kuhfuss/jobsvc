@@ -1,13 +1,14 @@
 package config
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
-type Config struct {
+type AppConfig struct {
 	Server struct {
 		Host     string `envconfig:"SERVER_HOST"`
 		Port     string `envconfig:"SERVER_PORT" default:"8080"`
@@ -20,20 +21,19 @@ type Config struct {
 		Username string `envconfig:"DB_USERNAME" required:"true"`
 		Password string `envconfig:"DB_PASSWORD" required:"true"`
 	}
+	RunTime struct {
+		Router *gin.Engine
+	}
 }
 
 const (
 	EnvFile = ".env"
 )
 
-var (
-	Cfg Config
-)
-
-func InitConfig(file string) api_error.ApiErr {
+func InitConfig(file string, config *AppConfig) api_error.ApiErr {
 	logger.Info("Initalizing configuration")
 	loadConfig(file)
-	err := envconfig.Process("", &Cfg)
+	err := envconfig.Process("", config)
 	if err != nil {
 		return api_error.NewInternalServerError("Could not configure app, Check your environment variables", err)
 	}
