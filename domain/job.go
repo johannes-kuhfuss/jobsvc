@@ -2,9 +2,11 @@ package domain
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
+	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/date"
 	"github.com/segmentio/ksuid"
@@ -75,7 +77,27 @@ type Job struct {
 	Rank          int32       `db:"rank"`
 }
 
-func NewEmptyJob(jobType string) (*Job, api_error.ApiErr) {
+type JobStatusUpdate struct {
+	newStatus JobStatus
+	errMsg    string
+}
+
+type JobRepository interface {
+	Store(Job) api_error.ApiErr
+	/*
+		FindAll(string) (*[]Job, api_error.ApiErr)
+		FindById(string) (*Job, api_error.ApiErr)
+		Search() (*[]Job, api_error.ApiErr)
+		Store(Job) api_error.ApiErr
+		Update(Job) api_error.ApiErr
+		DeleteById(string) api_error.ApiErr
+		GetNext(string) (*Job, api_error.ApiErr)
+		SetStatus(string, JobStatusUpdate) api_error.ApiErr
+		AddHistory(string, HistoryItem) api_error.ApiErr
+	*/
+}
+
+func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {
 	if strings.TrimSpace(jobType) == "" {
 		return nil, api_error.NewBadRequestError("Job must have a type")
 	}
@@ -87,7 +109,7 @@ func NewEmptyJob(jobType string) (*Job, api_error.ApiErr) {
 	return &Job{
 		Id:            ksuid.New(),
 		CorrelationId: "",
-		Name:          createJobName(""),
+		Name:          createJobName(jobName),
 		CreatedAt:     date.GetNowUtc(),
 		CreatedBy:     "",
 		ModifiedAt:    date.GetNowUtc(),
@@ -115,4 +137,48 @@ func createJobName(name string) string {
 		jobName = name
 	}
 	return jobName
+}
+
+func (j *Job) ToJobResponseDto() dto.JobResponse {
+	return dto.JobResponse{
+		Id:            j.Id.String(),
+		CorrelationId: j.CorrelationId,
+		Name:          j.Name,
+		CreatedAt:     j.CreatedAt,
+		CreatedBy:     j.CreatedBy,
+		ModifiedAt:    j.ModifiedAt,
+		ModifiedBy:    j.ModifiedBy,
+		Status:        string(j.Status),
+		Source:        j.Source,
+		Destination:   j.Destination,
+		Type:          j.Type,
+		SubType:       j.SubType,
+		Action:        j.Action,
+		ActionDetails: j.ActionDetails,
+		History:       j.History.ToString(),
+		ExtraData:     j.ExtraData,
+		Priority:      string(j.Priority),
+		Rank:          j.Rank,
+	}
+}
+
+func NewJobFromJobRequestDto(jobReq dto.CreateJobRequest) (*Job, api_error.ApiErr) {
+	newJob, err := NewJob(jobReq.Name, jobReq.Type)
+	if err != nil {
+		return nil, err
+	}
+	newJob.CorrelationId = jobReq.CorrelationId
+	newJob.Source = jobReq.Source
+	newJob.Destination = jobReq.Destination
+	newJob.SubType = jobReq.SubType
+	newJob.Action = jobReq.Action
+	newJob.ActionDetails = jobReq.ActionDetails
+	newJob.ExtraData = jobReq.ExtraData
+	newJob.Priority = JobPriority(jobReq.Priority)
+	if (jobReq.Rank >= 0) && (jobReq.Rank < math.MaxInt32) {
+		newJob.Rank = jobReq.Rank
+	} else {
+		newJob.Rank = 0
+	}
+	return newJob, nil
 }
