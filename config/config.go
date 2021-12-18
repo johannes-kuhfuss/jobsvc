@@ -9,8 +9,9 @@ import (
 
 type Config struct {
 	Server struct {
-		Host string `envconfig:"SERVER_HOST"`
-		Port string `envconfig:"SERVER_PORT" default:"8080"`
+		Host     string `envconfig:"SERVER_HOST"`
+		Port     string `envconfig:"SERVER_PORT" default:"8080"`
+		Shutdown bool   `ignored:"true" default:"false"`
 	}
 	Gin struct {
 		Mode string `envconfig:"GIN_MODE" default:"release"`
