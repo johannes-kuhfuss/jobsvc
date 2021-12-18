@@ -39,6 +39,18 @@ func TestConstants(t *testing.T) {
 	assert.EqualValues(t, PriorityIdle, "idle")
 }
 
+func Test_CreateJobName_EmptyName_ReturnsGeneratedName(t *testing.T) {
+	newName := createJobName("")
+
+	assert.Contains(t, newName, "new job @")
+}
+
+func Test_CreateJobName_WithName_ReturnsName(t *testing.T) {
+	newName := createJobName("jobName")
+
+	assert.EqualValues(t, newName, "jobName")
+}
+
 func Test_NewEmptyJob_NoJobType_ReturnsBadRequestErr(t *testing.T) {
 	newJob, err := NewEmptyJob("")
 	assert.Nil(t, newJob)
@@ -67,7 +79,7 @@ func Test_NewEmptyJob_WithJobType_ReturnsNewEmptyJob(t *testing.T) {
 	assert.Empty(t, newJob.SubType)
 	assert.Empty(t, newJob.Action)
 	assert.Empty(t, newJob.ActionDetails)
-	assert.Empty(t, newJob.History)
+	assert.Contains(t, newJob.History.ToString(), "Job created")
 	assert.Empty(t, newJob.ExtraData)
 	assert.EqualValues(t, PriorityMedium, newJob.Priority)
 	assert.EqualValues(t, 0, newJob.Rank)

@@ -46,6 +46,14 @@ func (h *HistoryList) Add(date time.Time, msg string) {
 	h.Entries = append(h.Entries, newEntry)
 }
 
+func (h *HistoryList) ToString() string {
+	var history string
+	for _, entry := range h.Entries {
+		history = history + entry.Date.Format(date.ApiDateLayout) + ": " + entry.Message + "\n"
+	}
+	return history
+}
+
 type Job struct {
 	Id            ksuid.KSUID `db:"id"`
 	CorrelationId string      `db:"correlation_id"`
