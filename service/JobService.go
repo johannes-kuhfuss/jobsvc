@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
@@ -9,12 +11,10 @@ import (
 type JobService interface {
 	CreateJob(dto.CreateJobRequest) (*dto.JobResponse, api_error.ApiErr)
 	GetAllJobs(string) (*[]dto.JobResponse, api_error.ApiErr)
+	GetJobById(string) (*dto.JobResponse, api_error.ApiErr)
+	DeleteJobById(string) api_error.ApiErr
+	GetNextJob() (*dto.JobResponse, api_error.ApiErr)
 	/*
-
-		GetJobById(string) (*dto.JobResponse, api_error.ApiErr)
-		CreateJob(dto.NewJobRequest) (*dto.JobResponse, api_error.ApiErr)
-		DeleteJobById(string) api_error.ApiErr
-		GetNextJob() (*dto.JobResponse, api_error.ApiErr)
 		SetStatus(string, dto.JobStatusUpdateRequest) api_error.ApiErr
 		SetResult(string, string) api_error.ApiErr
 	*/
@@ -50,5 +50,35 @@ func (s DefaultJobService) CreateJob(jobreq dto.CreateJobRequest) (*dto.JobRespo
 		return nil, err
 	}
 	response := newJob.ToJobResponseDto()
+	return &response, nil
+}
+
+func (s DefaultJobService) GetJobById(id string) (*dto.JobResponse, api_error.ApiErr) {
+	job, err := s.repo.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+	response := job.ToJobResponseDto()
+	return &response, nil
+}
+
+func (s DefaultJobService) DeleteJobById(id string) api_error.ApiErr {
+	_, err := s.GetJobById(id)
+	if err != nil {
+		return api_error.NewNotFoundError(fmt.Sprintf("Job with id %v does not exist", id))
+	}
+	err = s.repo.DeleteById(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s DefaultJobService) GetNextJob() (*dto.JobResponse, api_error.ApiErr) {
+	job, err := s.repo.GetNext()
+	if err != nil {
+		return nil, err
+	}
+	response := job.ToJobResponseDto()
 	return &response, nil
 }

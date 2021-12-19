@@ -85,17 +85,13 @@ type JobStatusUpdate struct {
 type JobRepository interface {
 	Store(Job) api_error.ApiErr
 	FindAll(string) (*[]Job, api_error.ApiErr)
-	/*
-
-		FindById(string) (*Job, api_error.ApiErr)
-		Search() (*[]Job, api_error.ApiErr)
-		Store(Job) api_error.ApiErr
-		Update(Job) api_error.ApiErr
-		DeleteById(string) api_error.ApiErr
-		GetNext(string) (*Job, api_error.ApiErr)
-		SetStatus(string, JobStatusUpdate) api_error.ApiErr
-		AddHistory(string, HistoryItem) api_error.ApiErr
-	*/
+	FindById(string) (*Job, api_error.ApiErr)
+	//Search() (*[]Job, api_error.ApiErr)
+	//Update(Job) api_error.ApiErr
+	DeleteById(string) api_error.ApiErr
+	GetNext() (*Job, api_error.ApiErr)
+	SetStatus(string, dto.UpdateJobStatusRequest) api_error.ApiErr
+	//AddHistory(string, HistoryItem) api_error.ApiErr
 }
 
 func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {

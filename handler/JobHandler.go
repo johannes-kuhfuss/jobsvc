@@ -63,3 +63,43 @@ func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, jobs)
 }
+
+func (jh *JobHandlers) GetJobById(c *gin.Context) {
+	jobId, err := getJobId(c.Param("job_id"))
+	if err != nil {
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	job, err := jh.Service.GetJobById(jobId)
+	if err != nil {
+		logger.Error("Service error while getting job by id", err)
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	c.JSON(http.StatusOK, job)
+}
+
+func (jh JobHandlers) DeleteJobById(c *gin.Context) {
+	jobId, err := getJobId(c.Param("job_id"))
+	if err != nil {
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	err = jh.Service.DeleteJobById(jobId)
+	if err != nil {
+		logger.Error("Service error while deleting job by id", err)
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}
+
+func (jh JobHandlers) GetNextJob(c *gin.Context) {
+	result, err := jh.Service.GetNextJob()
+	if err != nil {
+		logger.Error("Service error while getting next job", err)
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
