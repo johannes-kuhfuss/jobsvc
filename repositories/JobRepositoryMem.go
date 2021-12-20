@@ -58,13 +58,13 @@ func filterByStatus(jList map[string]domain.Job, status string) (*[]domain.Job, 
 	}
 }
 
-func (csm JobRepositoryMem) FindById(id string) (*domain.Job, api_error.ApiErr) {
-	csm.mu.Lock()
-	defer csm.mu.Unlock()
-	if len(csm.jobList) == 0 {
+func (jrm JobRepositoryMem) FindById(id string) (*domain.Job, api_error.ApiErr) {
+	jrm.mu.Lock()
+	defer jrm.mu.Unlock()
+	if len(jrm.jobList) == 0 {
 		return nil, api_error.NewNotFoundError("no jobs in joblist")
 	}
-	return filterById(csm.jobList, id)
+	return filterById(jrm.jobList, id)
 }
 
 func filterById(jList map[string]domain.Job, id string) (*domain.Job, api_error.ApiErr) {
@@ -76,40 +76,40 @@ func filterById(jList map[string]domain.Job, id string) (*domain.Job, api_error.
 	return nil, api_error.NewNotFoundError(fmt.Sprintf("no job with id %v in joblist", id))
 }
 
-func (csm JobRepositoryMem) Store(job domain.Job) api_error.ApiErr {
-	csm.mu.Lock()
-	defer csm.mu.Unlock()
+func (jrm JobRepositoryMem) Store(job domain.Job) api_error.ApiErr {
+	jrm.mu.Lock()
+	defer jrm.mu.Unlock()
 	job.ModifiedAt = date.GetNowUtc()
-	csm.jobList[job.Id.String()] = job
+	jrm.jobList[job.Id.String()] = job
 	return nil
 }
 
-func (csm JobRepositoryMem) DeleteById(id string) api_error.ApiErr {
-	csm.mu.Lock()
-	defer csm.mu.Unlock()
-	if len(csm.jobList) == 0 {
+func (jrm JobRepositoryMem) DeleteById(id string) api_error.ApiErr {
+	jrm.mu.Lock()
+	defer jrm.mu.Unlock()
+	if len(jrm.jobList) == 0 {
 		return api_error.NewNotFoundError("no jobs in joblist")
 	}
-	_, err := filterById(csm.jobList, id)
+	_, err := filterById(jrm.jobList, id)
 	if err != nil {
 		return err
 	}
-	delete(csm.jobList, id)
+	delete(jrm.jobList, id)
 	return nil
 }
 
-func (csm JobRepositoryMem) GetNext() (*domain.Job, api_error.ApiErr) {
+func (jrm JobRepositoryMem) GetNext() (*domain.Job, api_error.ApiErr) {
 	var nextJobId string = ""
 	var nextJobDate time.Time = date.GetNowUtc().Add(1 * time.Second)
 
-	csm.mu.Lock()
-	defer csm.mu.Unlock()
+	jrm.mu.Lock()
+	defer jrm.mu.Unlock()
 
-	if len(csm.jobList) == 0 {
+	if len(jrm.jobList) == 0 {
 		err := api_error.NewNotFoundError("no jobs in joblist")
 		return nil, err
 	}
-	for _, job := range csm.jobList {
+	for _, job := range jrm.jobList {
 		if job.Status == domain.StatusCreated {
 			if job.CreatedAt.Before(nextJobDate) {
 				nextJobDate = job.CreatedAt
@@ -121,16 +121,16 @@ func (csm JobRepositoryMem) GetNext() (*domain.Job, api_error.ApiErr) {
 		err := api_error.NewNotFoundError("no jobs with status created in joblist")
 		return nil, err
 	}
-	job, _ := filterById(csm.jobList, nextJobId)
+	job, _ := filterById(jrm.jobList, nextJobId)
 	return job, nil
 }
 
-func (csm JobRepositoryMem) SetStatus(id string, newStatus dto.UpdateJobStatusRequest) api_error.ApiErr {
-	job, err := csm.FindById(id)
+func (jrm JobRepositoryMem) SetStatus(id string, newStatus dto.UpdateJobStatusRequest) api_error.ApiErr {
+	job, err := jrm.FindById(id)
 	if err != nil {
 		return err
 	}
 	job.Status = domain.JobStatus(newStatus.Status)
-	csm.Store(*job)
+	jrm.Store(*job)
 	return nil
 }
