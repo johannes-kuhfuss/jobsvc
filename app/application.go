@@ -57,7 +57,6 @@ func initDb() {
 }
 
 func wireApp() {
-	//jobRepo = repositories.NewJobRepositoryMem()
 	jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	jobService = service.NewJobService(jobRepo)
 	jobHandler = handler.JobHandlers{

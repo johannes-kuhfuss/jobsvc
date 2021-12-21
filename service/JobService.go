@@ -14,10 +14,6 @@ type JobService interface {
 	GetJobById(string) (*dto.JobResponse, api_error.ApiErr)
 	DeleteJobById(string) api_error.ApiErr
 	GetNextJob() (*dto.JobResponse, api_error.ApiErr)
-	/*
-		SetStatus(string, dto.JobStatusUpdateRequest) api_error.ApiErr
-		SetResult(string, string) api_error.ApiErr
-	*/
 }
 
 type DefaultJobService struct {
