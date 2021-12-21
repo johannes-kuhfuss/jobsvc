@@ -48,7 +48,7 @@ func (jrd JobRepositoryDb) FindById(id string) (*domain.Job, api_error.ApiErr) {
 func (jrd JobRepositoryDb) Store(job domain.Job) api_error.ApiErr {
 	conn := jrd.cfg.RunTime.DbConn
 	sqlInsert := "INSERT INTO joblist (id, correlation_id, name, created_at, created_by, modified_at, modified_by, status, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)"
-	_, err := conn.Exec(sqlInsert, job.Id.String(), job.CorrelationId, job.Name, job.CreatedAt, job.CreatedBy, job.ModifiedAt, job.ModifiedBy, job.Status, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.History, nil, job.Priority, job.Rank)
+	_, err := conn.Exec(sqlInsert, job.Id.String(), job.CorrelationId, job.Name, job.CreatedAt, job.CreatedBy, job.ModifiedAt, job.ModifiedBy, job.Status, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.History, job.ExtraData, job.Priority, job.Rank)
 	if err != nil {
 		logger.Error("Database error storing new job", err)
 		return api_error.NewInternalServerError("Database error storing new job", err)
