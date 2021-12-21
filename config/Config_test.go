@@ -38,7 +38,7 @@ func writeTestEnv(fileName string) {
 	checkErr(err)
 	_, err = w.WriteString("DB_HOST=\"db_host\"\n")
 	checkErr(err)
-	_, err = w.WriteString("DB_PORT=\"db_port\"\n")
+	_, err = w.WriteString("DB_PORT=5432\n")
 	checkErr(err)
 	_, err = w.WriteString("DB_NAME=\"db_name\"\n")
 	checkErr(err)
@@ -96,7 +96,7 @@ func Test_InitConfig_WithEnvFile_SetsValues(t *testing.T) {
 	assert.EqualValues(t, "db_username", testConfig.Db.Username)
 	assert.EqualValues(t, "db_password", testConfig.Db.Password)
 	assert.EqualValues(t, "db_host", testConfig.Db.Host)
-	assert.EqualValues(t, "db_port", testConfig.Db.Port)
+	assert.EqualValues(t, 5432, testConfig.Db.Port)
 	assert.EqualValues(t, "db_name", testConfig.Db.Name)
 	assert.EqualValues(t, false, testConfig.Server.Shutdown)
 }

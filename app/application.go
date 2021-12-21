@@ -1,17 +1,18 @@
 package app
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/handler"
 	"github.com/johannes-kuhfuss/jobsvc/repositories"
 	"github.com/johannes-kuhfuss/jobsvc/service"
 	"github.com/johannes-kuhfuss/services_utils/logger"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 var (
@@ -46,8 +47,8 @@ func initRouter() {
 }
 
 func initDb() {
-	connUrl := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", cfg.Db.Username, cfg.Db.Password, cfg.Db.Host, cfg.Db.Port, cfg.Db.Name)
-	conn, err := pgxpool.Connect(context.Background(), connUrl)
+	connUrl := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", cfg.Db.Host, cfg.Db.Port, cfg.Db.Username, cfg.Db.Password, cfg.Db.Name)
+	conn, err := sqlx.Connect("postgres", connUrl)
 	if err != nil {
 		logger.Error("Could not connect to database.", err)
 		panic(err)
@@ -56,8 +57,8 @@ func initDb() {
 }
 
 func wireApp() {
-	jobRepo = repositories.NewJobRepositoryMem()
-	//jobRepo = repositories.NewJobRepositoryDb(&cfg)
+	//jobRepo = repositories.NewJobRepositoryMem()
+	jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	jobService = service.NewJobService(jobRepo)
 	jobHandler = handler.JobHandlers{
 		Service: jobService,

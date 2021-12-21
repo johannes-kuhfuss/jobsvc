@@ -1,6 +1,9 @@
 package domain
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -54,6 +57,18 @@ func (h *HistoryList) ToString() string {
 		history = history + entry.Date.Format(date.ApiDateLayout) + ": " + entry.Message + "\n"
 	}
 	return history
+}
+
+func (h HistoryList) Value() (driver.Value, error) {
+	return json.Marshal(h)
+}
+
+func (h *HistoryList) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &h)
 }
 
 type Job struct {

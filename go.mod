@@ -42,8 +42,10 @@ require (
 require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/jackc/pgx/v4 v4.14.1
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/lib/pq v1.10.4
 	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/segmentio/ksuid v1.0.4
 	go.uber.org/atomic v1.9.0 // indirect
