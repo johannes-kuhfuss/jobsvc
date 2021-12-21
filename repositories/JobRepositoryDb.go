@@ -1,16 +1,18 @@
 package repositories
 
 import (
+	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 )
 
 type JobRepositoryDb struct {
+	cfg *config.AppConfig
 }
 
-func NewJobRepositoryDb() JobRepositoryDb {
-	return JobRepositoryDb{}
+func NewJobRepositoryDb(c *config.AppConfig) JobRepositoryDb {
+	return JobRepositoryDb{c}
 }
 
 func (jrd JobRepositoryDb) FindAll(status string) (*[]domain.Job, api_error.ApiErr) {

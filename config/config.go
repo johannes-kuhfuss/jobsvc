@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/joho/godotenv"
@@ -17,12 +18,16 @@ type AppConfig struct {
 	Gin struct {
 		Mode string `envconfig:"GIN_MODE" default:"release"`
 	}
-	Database struct {
+	Db struct {
 		Username string `envconfig:"DB_USERNAME" required:"true"`
 		Password string `envconfig:"DB_PASSWORD" required:"true"`
+		Host     string `envconfig:"DB_HOST" required:"true"`
+		Port     string `envconfig:"DB_PORT" required:"true"`
+		Name     string `envconfig:"DB_NAME" required:"true"`
 	}
 	RunTime struct {
 		Router *gin.Engine
+		DbConn *pgxpool.Pool
 	}
 }
 

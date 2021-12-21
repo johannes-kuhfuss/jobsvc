@@ -36,6 +36,12 @@ func writeTestEnv(fileName string) {
 	checkErr(err)
 	_, err = w.WriteString("DB_PASSWORD=\"db_password\"\n")
 	checkErr(err)
+	_, err = w.WriteString("DB_HOST=\"db_host\"\n")
+	checkErr(err)
+	_, err = w.WriteString("DB_PORT=\"db_port\"\n")
+	checkErr(err)
+	_, err = w.WriteString("DB_NAME=\"db_name\"\n")
+	checkErr(err)
 	w.Flush()
 }
 
@@ -50,6 +56,9 @@ func unsetEnvVars() {
 	os.Unsetenv("SERVER_PORT")
 	os.Unsetenv("DB_USERNAME")
 	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("DB_HOST")
+	os.Unsetenv("DB_PORT")
+	os.Unsetenv("DB_NAME")
 }
 
 func Test_loadConfig_NoEnvFile_Returns_Error(t *testing.T) {
@@ -84,7 +93,10 @@ func Test_InitConfig_WithEnvFile_SetsValues(t *testing.T) {
 	err := InitConfig(testEnvFile, &testConfig)
 
 	assert.Nil(t, err)
-	assert.EqualValues(t, "db_username", testConfig.Database.Username)
-	assert.EqualValues(t, "db_password", testConfig.Database.Password)
+	assert.EqualValues(t, "db_username", testConfig.Db.Username)
+	assert.EqualValues(t, "db_password", testConfig.Db.Password)
+	assert.EqualValues(t, "db_host", testConfig.Db.Host)
+	assert.EqualValues(t, "db_port", testConfig.Db.Port)
+	assert.EqualValues(t, "db_name", testConfig.Db.Name)
 	assert.EqualValues(t, false, testConfig.Server.Shutdown)
 }
