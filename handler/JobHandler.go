@@ -35,10 +35,10 @@ func getJobId(jobIdParam string) (string, api_error.ApiErr) {
 }
 
 func (jh *JobHandlers) CreateJob(c *gin.Context) {
-	var newJobReq dto.CreateJobRequest
+	var newJobReq dto.CreateUpdateJobRequest
 	if err := c.ShouldBindJSON(&newJobReq); err != nil {
 		logger.Error("invalid JSON body in create job request", err)
-		apiErr := api_error.NewBadRequestError("invalid json body")
+		apiErr := api_error.NewBadRequestError("invalid json body for job creation")
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
@@ -91,13 +91,35 @@ func (jh JobHandlers) DeleteJobById(c *gin.Context) {
 		c.JSON(err.StatusCode(), err)
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }
 
 func (jh JobHandlers) GetNextJob(c *gin.Context) {
 	result, err := jh.Service.GetNextJob()
 	if err != nil {
 		logger.Error("Service error while getting next job", err)
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (jh JobHandlers) UpdateJob(c *gin.Context) {
+	jobId, err := getJobId(c.Param("job_id"))
+	if err != nil {
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	var updJobReq dto.CreateUpdateJobRequest
+	if err := c.ShouldBindJSON(&updJobReq); err != nil {
+		logger.Error("invalid JSON body in update job request", err)
+		apiErr := api_error.NewBadRequestError("invalid json body for job update")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
+	result, err := jh.Service.UpdateJob(jobId, updJobReq)
+	if err != nil {
+		logger.Error("Service error while updating job", err)
 		c.JSON(err.StatusCode(), err)
 		return
 	}

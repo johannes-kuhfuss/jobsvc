@@ -91,3 +91,14 @@ func (jrd JobRepositoryDb) GetNext() (*domain.Job, api_error.ApiErr) {
 func (jrd JobRepositoryDb) SetStatus(id string, newStatus dto.UpdateJobStatusRequest) api_error.ApiErr {
 	panic("not implemented")
 }
+
+func (jrd JobRepositoryDb) Update(job domain.Job) (*domain.Job, api_error.ApiErr) {
+	conn := jrd.cfg.RunTime.DbConn
+	sqlUpdate := "UPDATE joblist SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) WHERE id = $14"
+	_, err := conn.Exec(sqlUpdate, job.CorrelationId, job.Name, job.ModifiedAt, job.ModifiedBy, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.ExtraData, job.Priority, job.Rank, job.Id.String())
+	if err != nil {
+		logger.Error("Database error updating job with id", err)
+		return nil, api_error.NewInternalServerError("Database error updating job with id", nil)
+	}
+	return nil, nil
+}

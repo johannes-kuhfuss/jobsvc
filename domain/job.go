@@ -102,7 +102,7 @@ type JobRepository interface {
 	FindAll(string) (*[]Job, api_error.ApiErr)
 	FindById(string) (*Job, api_error.ApiErr)
 	//Search() (*[]Job, api_error.ApiErr)
-	//Update(Job) api_error.ApiErr
+	Update(Job) (*Job, api_error.ApiErr)
 	DeleteById(string) api_error.ApiErr
 	GetNext() (*Job, api_error.ApiErr)
 	SetStatus(string, dto.UpdateJobStatusRequest) api_error.ApiErr
@@ -174,7 +174,7 @@ func (j *Job) ToJobResponseDto() dto.JobResponse {
 	}
 }
 
-func NewJobFromJobRequestDto(jobReq dto.CreateJobRequest) (*Job, api_error.ApiErr) {
+func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr) {
 	newJob, err := NewJob(jobReq.Name, jobReq.Type)
 	if err != nil {
 		return nil, err

@@ -9,11 +9,12 @@ import (
 )
 
 type JobService interface {
-	CreateJob(dto.CreateJobRequest) (*dto.JobResponse, api_error.ApiErr)
+	CreateJob(dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
 	GetAllJobs(string) (*[]dto.JobResponse, api_error.ApiErr)
 	GetJobById(string) (*dto.JobResponse, api_error.ApiErr)
 	DeleteJobById(string) api_error.ApiErr
 	GetNextJob() (*dto.JobResponse, api_error.ApiErr)
+	UpdateJob(string, dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
 }
 
 type DefaultJobService struct {
@@ -36,7 +37,7 @@ func (s DefaultJobService) GetAllJobs(status string) (*[]dto.JobResponse, api_er
 	return &response, nil
 }
 
-func (s DefaultJobService) CreateJob(jobreq dto.CreateJobRequest) (*dto.JobResponse, api_error.ApiErr) {
+func (s DefaultJobService) CreateJob(jobreq dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr) {
 	newJob, err := domain.NewJob(jobreq.Name, jobreq.Type)
 	if err != nil {
 		return nil, err
@@ -76,5 +77,22 @@ func (s DefaultJobService) GetNextJob() (*dto.JobResponse, api_error.ApiErr) {
 		return nil, err
 	}
 	response := job.ToJobResponseDto()
+	return &response, nil
+}
+
+func (s DefaultJobService) UpdateJob(id string, jobReq dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr) {
+	_, err := s.GetJobById(id)
+	if err != nil {
+		return nil, api_error.NewNotFoundError(fmt.Sprintf("Job with id %v does not exist", id))
+	}
+	updJob, err := domain.NewJobFromJobRequestDto(jobReq)
+	if err != nil {
+		return nil, err
+	}
+	newJob, err := s.repo.Update(*updJob)
+	if err != nil {
+		return nil, err
+	}
+	response := newJob.ToJobResponseDto()
 	return &response, nil
 }

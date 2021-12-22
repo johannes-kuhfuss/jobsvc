@@ -1,6 +1,6 @@
 package dto
 
-type CreateJobRequest struct {
+type CreateUpdateJobRequest struct {
 	CorrelationId string `json:"correlation_id"`
 	Name          string `json:"name"`
 	Source        string `json:"source"`

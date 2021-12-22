@@ -1,0 +1,11 @@
+Put
+Set status / get status
+Add history, get history
+Add progress
+Get next, but not GET 
+Sanitize input
+Pagination
+Sort and filter
+Let user choose return values
+Library to parse url params?
+Return value count as header
