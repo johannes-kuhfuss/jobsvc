@@ -96,7 +96,7 @@ func (jrd JobRepositoryDb) SetStatus(id string, newStatus dto.UpdateJobStatusReq
 
 func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {
 	conn := jrd.cfg.RunTime.DbConn
-	var oldJob, newJob domain.Job
+	var oldJob domain.Job
 	var sqlErr error
 	var tx *sqlx.Tx
 
@@ -112,21 +112,17 @@ func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) 
 	if err != nil {
 		return nil, err
 	}
-	sqlUpdate := "UPDATE joblist SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) WHERE id = $14"
-	_, sqlErr = tx.Exec(sqlUpdate, updJob.CorrelationId, updJob.Name, updJob.ModifiedAt, updJob.ModifiedBy, updJob.Source, updJob.Destination, updJob.Type, updJob.SubType, updJob.Action, updJob.ActionDetails, updJob.ExtraData, updJob.Priority, updJob.Rank, updJob.Id.String())
+	sqlUpdate := "UPDATE joblist SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15"
+	_, sqlErr = tx.Exec(sqlUpdate, updJob.CorrelationId, updJob.Name, updJob.ModifiedAt, updJob.ModifiedBy, updJob.Source, updJob.Destination, updJob.Type, updJob.SubType, updJob.Action, updJob.ActionDetails, updJob.History, updJob.ExtraData, updJob.Priority, updJob.Rank, updJob.Id.String())
 	if sqlErr != nil {
 		logger.Error("Database error updating job with id", sqlErr)
-		return nil, api_error.NewInternalServerError("Database error updating job with id", nil)
-	}
-	sqlErr = tx.Get(&newJob, fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table), id)
-	if sqlErr != nil {
 		return nil, api_error.NewInternalServerError("Database error updating job with id", nil)
 	}
 	sqlErr = tx.Commit()
 	if sqlErr != nil {
 		return nil, api_error.NewInternalServerError("Database transaction error updating job with id", nil)
 	}
-	return &newJob, nil
+	return updJob, nil
 }
 
 func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {
@@ -204,8 +200,14 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 	} else {
 		mergedJob.Rank = oldJob.Rank
 	}
-	oldJob.History.AddNow(fmt.Sprintf("Job data changed. New Data: %v", changed))
-	mergedJob.History = oldJob.History
+
+	newHistory := oldJob.History
+	var changedStr string
+	for k, v := range changed {
+		changedStr = fmt.Sprintf("%v%v: %v; ", changedStr, k, v)
+	}
+	newHistory.AddNow(fmt.Sprintf("Job data changed. New Data: %v", changedStr))
+	mergedJob.History = newHistory
 
 	return &mergedJob, nil
 }
