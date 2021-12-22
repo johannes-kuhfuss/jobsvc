@@ -40,10 +40,11 @@ func StartApp() {
 func initRouter() {
 	gin.SetMode(cfg.Gin.Mode)
 	gin.DefaultWriter = logger.GetLogger()
-	cfg.RunTime.Router = gin.New()
-	cfg.RunTime.Router.Use(gin.Logger())
-	cfg.RunTime.Router.Use(gin.Recovery())
-	cfg.RunTime.Router.SetTrustedProxies(nil)
+	router := gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+	router.SetTrustedProxies(nil)
+	cfg.RunTime.Router = router
 }
 
 func initDb() {
