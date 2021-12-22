@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
+	"github.com/johannes-kuhfuss/services_utils/date"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 )
 
@@ -92,13 +94,104 @@ func (jrd JobRepositoryDb) SetStatus(id string, newStatus dto.UpdateJobStatusReq
 	panic("not implemented")
 }
 
-func (jrd JobRepositoryDb) Update(job domain.Job) (*domain.Job, api_error.ApiErr) {
+func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {
 	conn := jrd.cfg.RunTime.DbConn
-	sqlUpdate := "UPDATE joblist SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) WHERE id = $14"
-	_, err := conn.Exec(sqlUpdate, job.CorrelationId, job.Name, job.ModifiedAt, job.ModifiedBy, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.ExtraData, job.Priority, job.Rank, job.Id.String())
-	if err != nil {
-		logger.Error("Database error updating job with id", err)
+	var oldJob, newJob domain.Job
+	var sqlErr error
+	var tx *sqlx.Tx
+
+	tx, sqlErr = conn.Beginx()
+	if sqlErr != nil {
+		return nil, api_error.NewInternalServerError("Database transaction error updating job with id", nil)
+	}
+	sqlErr = tx.Get(&oldJob, fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table), id)
+	if sqlErr != nil {
 		return nil, api_error.NewInternalServerError("Database error updating job with id", nil)
 	}
-	return nil, nil
+	updJob, err := mergeJobs(&oldJob, jobReq)
+	if err != nil {
+		return nil, err
+	}
+	sqlUpdate := "UPDATE joblist SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) WHERE id = $14"
+	_, sqlErr = tx.Exec(sqlUpdate, updJob.CorrelationId, updJob.Name, updJob.ModifiedAt, updJob.ModifiedBy, updJob.Source, updJob.Destination, updJob.Type, updJob.SubType, updJob.Action, updJob.ActionDetails, updJob.ExtraData, updJob.Priority, updJob.Rank, updJob.Id.String())
+	if sqlErr != nil {
+		logger.Error("Database error updating job with id", sqlErr)
+		return nil, api_error.NewInternalServerError("Database error updating job with id", nil)
+	}
+	sqlErr = tx.Get(&newJob, fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table), id)
+	if sqlErr != nil {
+		return nil, api_error.NewInternalServerError("Database error updating job with id", nil)
+	}
+	sqlErr = tx.Commit()
+	if sqlErr != nil {
+		return nil, api_error.NewInternalServerError("Database transaction error updating job with id", nil)
+	}
+	return &newJob, nil
+}
+
+func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {
+	mergedJob := domain.Job{}
+	mergedJob.Id = oldJob.Id
+	if updJobReq.CorrelationId != "" {
+		mergedJob.CorrelationId = updJobReq.CorrelationId
+	} else {
+		mergedJob.CorrelationId = oldJob.CorrelationId
+	}
+	if updJobReq.Name != "" {
+		mergedJob.Name = updJobReq.Name
+	} else {
+		mergedJob.Name = oldJob.Name
+	}
+	mergedJob.CreatedAt = oldJob.CreatedAt
+	mergedJob.CreatedBy = oldJob.CreatedBy
+	mergedJob.ModifiedAt = date.GetNowUtc()
+	mergedJob.ModifiedBy = ""
+	mergedJob.Status = domain.JobStatus(oldJob.Status)
+	if updJobReq.Source != "" {
+		mergedJob.Source = updJobReq.Source
+	} else {
+		mergedJob.Source = oldJob.Source
+	}
+	if updJobReq.Destination != "" {
+		mergedJob.Destination = updJobReq.Destination
+	} else {
+		mergedJob.Destination = oldJob.Destination
+	}
+	if updJobReq.Type != "" {
+		mergedJob.Type = updJobReq.Type
+	} else {
+		mergedJob.Type = oldJob.Type
+	}
+	if updJobReq.SubType != "" {
+		mergedJob.SubType = updJobReq.SubType
+	} else {
+		mergedJob.SubType = oldJob.SubType
+	}
+	if updJobReq.Action != "" {
+		mergedJob.Action = updJobReq.Action
+	} else {
+		mergedJob.Action = oldJob.Action
+	}
+	if updJobReq.ActionDetails != "" {
+		mergedJob.ActionDetails = updJobReq.ActionDetails
+	} else {
+		mergedJob.ActionDetails = oldJob.ActionDetails
+	}
+	mergedJob.History = oldJob.History
+	if updJobReq.ExtraData != "" {
+		mergedJob.ExtraData = updJobReq.ExtraData
+	} else {
+		mergedJob.ExtraData = oldJob.ExtraData
+	}
+	if updJobReq.Priority != "" {
+		mergedJob.Priority = domain.JobPriority(updJobReq.Priority)
+	} else {
+		mergedJob.Priority = oldJob.Priority
+	}
+	if updJobReq.Rank != 0 {
+		mergedJob.Rank = updJobReq.Rank
+	} else {
+		mergedJob.Rank = oldJob.Rank
+	}
+	return &mergedJob, nil
 }

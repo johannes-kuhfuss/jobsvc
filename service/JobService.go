@@ -85,11 +85,7 @@ func (s DefaultJobService) UpdateJob(id string, jobReq dto.CreateUpdateJobReques
 	if err != nil {
 		return nil, api_error.NewNotFoundError(fmt.Sprintf("Job with id %v does not exist", id))
 	}
-	updJob, err := domain.NewJobFromJobRequestDto(jobReq)
-	if err != nil {
-		return nil, err
-	}
-	newJob, err := s.repo.Update(*updJob)
+	newJob, err := s.repo.Update(id, jobReq)
 	if err != nil {
 		return nil, err
 	}

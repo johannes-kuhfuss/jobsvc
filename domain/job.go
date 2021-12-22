@@ -102,7 +102,7 @@ type JobRepository interface {
 	FindAll(string) (*[]Job, api_error.ApiErr)
 	FindById(string) (*Job, api_error.ApiErr)
 	//Search() (*[]Job, api_error.ApiErr)
-	Update(Job) (*Job, api_error.ApiErr)
+	Update(string, dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr)
 	DeleteById(string) api_error.ApiErr
 	GetNext() (*Job, api_error.ApiErr)
 	SetStatus(string, dto.UpdateJobStatusRequest) api_error.ApiErr
