@@ -129,7 +129,7 @@ func fillJob(job *Job) {
 }
 
 func Test_NewJobFromJobRequestDto_NoType_ReturnsBadRequestError(t *testing.T) {
-	newJobReq := dto.CreateJobRequest{}
+	newJobReq := dto.CreateUpdateJobRequest{}
 	newJob, err := NewJobFromJobRequestDto(newJobReq)
 
 	assert.Nil(t, newJob)
@@ -148,8 +148,8 @@ func Test_NewJobFromJobRequestDto_InvalidRank_SetsRankToZero(t *testing.T) {
 	assert.EqualValues(t, 0, newJob.Rank)
 }
 
-func fillJobRequest() dto.CreateJobRequest {
-	return dto.CreateJobRequest{
+func fillJobRequest() dto.CreateUpdateJobRequest {
+	return dto.CreateUpdateJobRequest{
 		CorrelationId: "corr id",
 		Name:          "my new job",
 		Source:        "source",
