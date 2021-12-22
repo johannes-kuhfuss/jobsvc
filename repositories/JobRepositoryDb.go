@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/jobsvc/config"
@@ -90,8 +91,37 @@ func (jrd JobRepositoryDb) GetNext() (*domain.Job, api_error.ApiErr) {
 	panic("not implemented")
 }
 
-func (jrd JobRepositoryDb) SetStatus(id string, newStatus dto.UpdateJobStatusRequest) api_error.ApiErr {
-	panic("not implemented")
+func (jrd JobRepositoryDb) SetStatusById(id string, newStatus dto.UpdateJobStatusRequest) api_error.ApiErr {
+	conn := jrd.cfg.RunTime.DbConn
+	var oldJob domain.Job
+	var sqlErr error
+	var tx *sqlx.Tx
+	tx, sqlErr = conn.Beginx()
+	if sqlErr != nil {
+		return api_error.NewInternalServerError("Database transaction error updating job status with id", nil)
+	}
+	sqlErr = tx.Get(&oldJob, fmt.Sprintf("SELECT status, history FROM %v WHERE id = $1", table), id)
+	if sqlErr != nil {
+		return api_error.NewInternalServerError("Database error updating job status with id", nil)
+	}
+	newHistory := oldJob.History
+	if strings.TrimSpace(newStatus.Message) == "" {
+		newHistory.AddNow(fmt.Sprintf("Job status changed. New status: %v", newStatus.Status))
+	} else {
+		newHistory.AddNow(fmt.Sprintf("Job status changed. New status: %v; %v", newStatus.Status, newStatus.Message))
+	}
+
+	sqlUpdate := "UPDATE joblist SET (status, history) = ($1, $2) WHERE id = $3"
+	_, sqlErr = tx.Exec(sqlUpdate, newStatus.Status, newHistory, id)
+	if sqlErr != nil {
+		logger.Error("Database error updating job with id", sqlErr)
+		return api_error.NewInternalServerError("Database error updating job status with id", nil)
+	}
+	sqlErr = tx.Commit()
+	if sqlErr != nil {
+		return api_error.NewInternalServerError("Database transaction error updating job status with id", nil)
+	}
+	return nil
 }
 
 func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {

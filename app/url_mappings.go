@@ -7,4 +7,5 @@ func mapUrls() {
 	cfg.RunTime.Router.DELETE("jobs/:job_id", jobHandler.DeleteJobById)
 	//cfg.RunTime.Router.GET("/jobs/next", jobHandler.GetNextJob)
 	cfg.RunTime.Router.PUT("jobs/:job_id", jobHandler.UpdateJob)
+	cfg.RunTime.Router.PUT("jobs/:job_id/status", jobHandler.SetStatusById)
 }

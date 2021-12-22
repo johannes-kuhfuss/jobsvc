@@ -1,6 +1,5 @@
-Put
-Set status / get status
-Add history, get history
+Set status
+Add history
 Add progress
 Get next, but not GET 
 Sanitize input
@@ -9,3 +8,5 @@ Sort and filter
 Let user choose return values
 Library to parse url params?
 Return value count as header
+get status
+get history

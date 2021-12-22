@@ -110,7 +110,7 @@ type JobRepository interface {
 	Update(string, dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr)
 	DeleteById(string) api_error.ApiErr
 	GetNext() (*Job, api_error.ApiErr)
-	SetStatus(string, dto.UpdateJobStatusRequest) api_error.ApiErr
+	SetStatusById(string, dto.UpdateJobStatusRequest) api_error.ApiErr
 	//AddHistory(string, HistoryItem) api_error.ApiErr
 }
 

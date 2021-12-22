@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
@@ -15,6 +16,7 @@ type JobService interface {
 	DeleteJobById(string) api_error.ApiErr
 	GetNextJob() (*dto.JobResponse, api_error.ApiErr)
 	UpdateJob(string, dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
+	SetStatusById(string, dto.UpdateJobStatusRequest) api_error.ApiErr
 }
 
 type DefaultJobService struct {
@@ -91,4 +93,21 @@ func (s DefaultJobService) UpdateJob(id string, jobReq dto.CreateUpdateJobReques
 	}
 	response := newJob.ToJobResponseDto()
 	return &response, nil
+}
+
+func (s DefaultJobService) SetStatusById(id string, statusReq dto.UpdateJobStatusRequest) api_error.ApiErr {
+	_, err := s.GetJobById(id)
+	if err != nil {
+		return api_error.NewNotFoundError(fmt.Sprintf("Job with id %v does not exist", id))
+	}
+	statusVal := string(domain.JobStatus(statusReq.Status))
+	if strings.TrimSpace(statusVal) == "" {
+		return api_error.NewBadRequestError(fmt.Sprintf("Wrong status value %v when updating job status", statusVal))
+	}
+	statusReq.Status = statusVal
+	err = s.repo.SetStatusById(id, statusReq)
+	if err != nil {
+		return err
+	}
+	return nil
 }
