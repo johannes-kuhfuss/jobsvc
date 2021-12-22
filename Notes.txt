@@ -1,4 +1,3 @@
-Review JobRepo; move biz logic to service
 Add progress
 Get next, but not GET 
 Sanitize input

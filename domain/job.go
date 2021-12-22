@@ -110,8 +110,8 @@ type JobRepository interface {
 	Update(string, dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr)
 	DeleteById(string) api_error.ApiErr
 	GetNext() (*Job, api_error.ApiErr)
-	SetStatusById(string, dto.UpdateJobStatusRequest) api_error.ApiErr
-	SetHistoryById(string, dto.UpdateJobHistoryRequest) api_error.ApiErr
+	SetStatusById(string, string, string) api_error.ApiErr
+	SetHistoryById(string, string) api_error.ApiErr
 }
 
 func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {

@@ -3,7 +3,6 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/jobsvc/config"
@@ -91,11 +90,12 @@ func (jrd JobRepositoryDb) GetNext() (*domain.Job, api_error.ApiErr) {
 	panic("not implemented")
 }
 
-func (jrd JobRepositoryDb) SetStatusById(id string, newStatus dto.UpdateJobStatusRequest) api_error.ApiErr {
+func (jrd JobRepositoryDb) SetStatusById(id string, newStatus string, message string) api_error.ApiErr {
 	conn := jrd.cfg.RunTime.DbConn
 	var oldJob domain.Job
 	var sqlErr error
 	var tx *sqlx.Tx
+
 	tx, sqlErr = conn.Beginx()
 	if sqlErr != nil {
 		return api_error.NewInternalServerError("Database transaction error updating job status with id", nil)
@@ -105,15 +105,10 @@ func (jrd JobRepositoryDb) SetStatusById(id string, newStatus dto.UpdateJobStatu
 		return api_error.NewInternalServerError("Database error updating job status with id", nil)
 	}
 	newHistory := oldJob.History
-	if strings.TrimSpace(newStatus.Message) == "" {
-		newHistory.AddNow(fmt.Sprintf("Job status changed. New status: %v", newStatus.Status))
-	} else {
-		newHistory.AddNow(fmt.Sprintf("Job status changed. New status: %v; %v", newStatus.Status, newStatus.Message))
-	}
-
+	newHistory.AddNow(message)
 	sqlUpdate := "UPDATE joblist SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4"
 	now := date.GetNowUtc()
-	_, sqlErr = tx.Exec(sqlUpdate, now, newStatus.Status, newHistory, id)
+	_, sqlErr = tx.Exec(sqlUpdate, now, newStatus, newHistory, id)
 	if sqlErr != nil {
 		logger.Error("Database error updating job with id", sqlErr)
 		return api_error.NewInternalServerError("Database error updating job status with id", nil)
@@ -122,6 +117,7 @@ func (jrd JobRepositoryDb) SetStatusById(id string, newStatus dto.UpdateJobStatu
 	if sqlErr != nil {
 		return api_error.NewInternalServerError("Database transaction error updating job status with id", nil)
 	}
+
 	return nil
 }
 
@@ -243,11 +239,12 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 	return &mergedJob, nil
 }
 
-func (jrd JobRepositoryDb) SetHistoryById(id string, newHistoryItem dto.UpdateJobHistoryRequest) api_error.ApiErr {
+func (jrd JobRepositoryDb) SetHistoryById(id string, message string) api_error.ApiErr {
 	conn := jrd.cfg.RunTime.DbConn
 	var oldJob domain.Job
 	var sqlErr error
 	var tx *sqlx.Tx
+
 	tx, sqlErr = conn.Beginx()
 	if sqlErr != nil {
 		return api_error.NewInternalServerError("Database transaction error updating job history with id", nil)
@@ -257,7 +254,7 @@ func (jrd JobRepositoryDb) SetHistoryById(id string, newHistoryItem dto.UpdateJo
 		return api_error.NewInternalServerError("Database error updating job history with id", nil)
 	}
 	newHistory := oldJob.History
-	newHistory.AddNow(newHistoryItem.Message)
+	newHistory.AddNow(message)
 	sqlUpdate := "UPDATE joblist SET (modified_at, history) = ($1, $2) WHERE id = $3"
 	now := date.GetNowUtc()
 	_, sqlErr = tx.Exec(sqlUpdate, now, newHistory, id)
@@ -269,5 +266,6 @@ func (jrd JobRepositoryDb) SetHistoryById(id string, newHistoryItem dto.UpdateJo
 	if sqlErr != nil {
 		return api_error.NewInternalServerError("Database transaction error updating job history with id", nil)
 	}
+
 	return nil
 }
