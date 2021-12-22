@@ -51,6 +51,11 @@ func (h *HistoryList) Add(date time.Time, msg string) {
 	h.Entries = append(h.Entries, newEntry)
 }
 
+func (h *HistoryList) AddNow(msg string) {
+	now, _ := date.GetNowLocal("")
+	h.Add(*now, msg)
+}
+
 func (h *HistoryList) ToString() string {
 	var history string
 	for _, entry := range h.Entries {
@@ -115,8 +120,7 @@ func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {
 	}
 
 	var history HistoryList
-	now, _ := date.GetNowLocal("")
-	history.Add(*now, "Job created")
+	history.AddNow("Job created")
 
 	return &Job{
 		Id:            ksuid.New(),

@@ -130,15 +130,18 @@ func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) 
 }
 
 func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {
+	changed := make(map[string]string)
 	mergedJob := domain.Job{}
 	mergedJob.Id = oldJob.Id
 	if updJobReq.CorrelationId != "" {
 		mergedJob.CorrelationId = updJobReq.CorrelationId
+		changed["CorrelationId"] = updJobReq.CorrelationId
 	} else {
 		mergedJob.CorrelationId = oldJob.CorrelationId
 	}
 	if updJobReq.Name != "" {
 		mergedJob.Name = updJobReq.Name
+		changed["Name"] = updJobReq.Name
 	} else {
 		mergedJob.Name = oldJob.Name
 	}
@@ -149,49 +152,60 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 	mergedJob.Status = domain.JobStatus(oldJob.Status)
 	if updJobReq.Source != "" {
 		mergedJob.Source = updJobReq.Source
+		changed["Source"] = updJobReq.Source
 	} else {
 		mergedJob.Source = oldJob.Source
 	}
 	if updJobReq.Destination != "" {
 		mergedJob.Destination = updJobReq.Destination
+		changed["Destination"] = updJobReq.Destination
 	} else {
 		mergedJob.Destination = oldJob.Destination
 	}
 	if updJobReq.Type != "" {
 		mergedJob.Type = updJobReq.Type
+		changed["Type"] = updJobReq.Type
 	} else {
 		mergedJob.Type = oldJob.Type
 	}
 	if updJobReq.SubType != "" {
 		mergedJob.SubType = updJobReq.SubType
+		changed["SubType"] = updJobReq.SubType
 	} else {
 		mergedJob.SubType = oldJob.SubType
 	}
 	if updJobReq.Action != "" {
 		mergedJob.Action = updJobReq.Action
+		changed["Action"] = updJobReq.Action
 	} else {
 		mergedJob.Action = oldJob.Action
 	}
 	if updJobReq.ActionDetails != "" {
 		mergedJob.ActionDetails = updJobReq.ActionDetails
+		changed["ActionDetails"] = updJobReq.ActionDetails
 	} else {
 		mergedJob.ActionDetails = oldJob.ActionDetails
 	}
-	mergedJob.History = oldJob.History
 	if updJobReq.ExtraData != "" {
 		mergedJob.ExtraData = updJobReq.ExtraData
+		changed["ExtraData"] = updJobReq.ExtraData
 	} else {
 		mergedJob.ExtraData = oldJob.ExtraData
 	}
 	if updJobReq.Priority != "" {
 		mergedJob.Priority = domain.JobPriority(updJobReq.Priority)
+		changed["Priority"] = string(domain.JobPriority(updJobReq.Priority))
 	} else {
 		mergedJob.Priority = oldJob.Priority
 	}
 	if updJobReq.Rank != 0 {
 		mergedJob.Rank = updJobReq.Rank
+		changed["Rank"] = string(updJobReq.Rank)
 	} else {
 		mergedJob.Rank = oldJob.Rank
 	}
+	oldJob.History.AddNow(fmt.Sprintf("Job data changed. New Data: %v", changed))
+	mergedJob.History = oldJob.History
+
 	return &mergedJob, nil
 }
