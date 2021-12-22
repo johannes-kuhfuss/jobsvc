@@ -1,9 +1,6 @@
 package domain
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -14,67 +11,6 @@ import (
 	"github.com/johannes-kuhfuss/services_utils/date"
 	"github.com/segmentio/ksuid"
 )
-
-type JobStatus string
-type JobPriority string
-
-const (
-	StatusCreated  JobStatus = "created"
-	StatusQueued   JobStatus = "queued"
-	StatusRunning  JobStatus = "running"
-	StatusPaused   JobStatus = "paused"
-	StatusFinished JobStatus = "finished"
-	StatusFailed   JobStatus = "failed"
-)
-
-const (
-	PriorityRealtime JobPriority = "realtime"
-	PriorityHigh     JobPriority = "high"
-	PriorityMedium   JobPriority = "medium"
-	PriorityLow      JobPriority = "low"
-	PriorityIdle     JobPriority = "idle"
-)
-
-type HistoryItem struct {
-	Date    time.Time
-	Message string
-}
-
-type HistoryList struct {
-	Entries []HistoryItem
-}
-
-func (h *HistoryList) Add(date time.Time, msg string) {
-	var newEntry HistoryItem
-	newEntry.Date = date
-	newEntry.Message = msg
-	h.Entries = append(h.Entries, newEntry)
-}
-
-func (h *HistoryList) AddNow(msg string) {
-	now, _ := date.GetNowLocal("")
-	h.Add(*now, msg)
-}
-
-func (h *HistoryList) ToString() string {
-	var history string
-	for _, entry := range h.Entries {
-		history = history + entry.Date.Format(date.ApiDateLayout) + ": " + entry.Message + "\n"
-	}
-	return history
-}
-
-func (h HistoryList) Value() (driver.Value, error) {
-	return json.Marshal(h)
-}
-
-func (h *HistoryList) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
-	}
-	return json.Unmarshal(b, &h)
-}
 
 type Job struct {
 	Id            ksuid.KSUID `db:"id"`
@@ -91,22 +27,17 @@ type Job struct {
 	SubType       string      `db:"sub_type"`
 	Action        string      `db:"action"`
 	ActionDetails string      `db:"action_details"`
+	Progress      int32       `db:"progress"`
 	History       HistoryList `db:"history"`
 	ExtraData     string      `db:"extra_data"`
 	Priority      JobPriority `db:"priority"`
 	Rank          int32       `db:"rank"`
 }
 
-type JobStatusUpdate struct {
-	newStatus JobStatus
-	errMsg    string
-}
-
 type JobRepository interface {
 	Store(Job) api_error.ApiErr
 	FindAll(string) (*[]Job, api_error.ApiErr)
 	FindById(string) (*Job, api_error.ApiErr)
-	//Search() (*[]Job, api_error.ApiErr)
 	Update(string, dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr)
 	DeleteById(string) api_error.ApiErr
 	Dequeue(string) (*Job, api_error.ApiErr)
@@ -137,6 +68,7 @@ func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {
 		SubType:       "",
 		Action:        "",
 		ActionDetails: "",
+		Progress:      0,
 		History:       history,
 		ExtraData:     "",
 		Priority:      PriorityMedium,
@@ -171,6 +103,7 @@ func (j *Job) ToJobResponseDto() dto.JobResponse {
 		SubType:       j.SubType,
 		Action:        j.Action,
 		ActionDetails: j.ActionDetails,
+		Progress:      j.Progress,
 		History:       j.History.ToString(),
 		ExtraData:     j.ExtraData,
 		Priority:      string(j.Priority),

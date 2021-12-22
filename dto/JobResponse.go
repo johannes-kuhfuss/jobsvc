@@ -17,6 +17,7 @@ type JobResponse struct {
 	SubType       string    `json:"sub_type"`
 	Action        string    `json:"action"`
 	ActionDetails string    `json:"action_details"`
+	Progress      int32     `json:"progress"`
 	History       string    `json:"history"`
 	ExtraData     string    `json:"extra_data"`
 	Priority      string    `json:"priority"`
