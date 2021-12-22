@@ -111,8 +111,9 @@ func (jrd JobRepositoryDb) SetStatusById(id string, newStatus dto.UpdateJobStatu
 		newHistory.AddNow(fmt.Sprintf("Job status changed. New status: %v; %v", newStatus.Status, newStatus.Message))
 	}
 
-	sqlUpdate := "UPDATE joblist SET (status, history) = ($1, $2) WHERE id = $3"
-	_, sqlErr = tx.Exec(sqlUpdate, newStatus.Status, newHistory, id)
+	sqlUpdate := "UPDATE joblist SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4"
+	now := date.GetNowUtc()
+	_, sqlErr = tx.Exec(sqlUpdate, now, newStatus.Status, newHistory, id)
 	if sqlErr != nil {
 		logger.Error("Database error updating job with id", sqlErr)
 		return api_error.NewInternalServerError("Database error updating job status with id", nil)
@@ -240,4 +241,33 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 	mergedJob.History = newHistory
 
 	return &mergedJob, nil
+}
+
+func (jrd JobRepositoryDb) SetHistoryById(id string, newHistoryItem dto.UpdateJobHistoryRequest) api_error.ApiErr {
+	conn := jrd.cfg.RunTime.DbConn
+	var oldJob domain.Job
+	var sqlErr error
+	var tx *sqlx.Tx
+	tx, sqlErr = conn.Beginx()
+	if sqlErr != nil {
+		return api_error.NewInternalServerError("Database transaction error updating job history with id", nil)
+	}
+	sqlErr = tx.Get(&oldJob, fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table), id)
+	if sqlErr != nil {
+		return api_error.NewInternalServerError("Database error updating job history with id", nil)
+	}
+	newHistory := oldJob.History
+	newHistory.AddNow(newHistoryItem.Message)
+	sqlUpdate := "UPDATE joblist SET (modified_at, history) = ($1, $2) WHERE id = $3"
+	now := date.GetNowUtc()
+	_, sqlErr = tx.Exec(sqlUpdate, now, newHistory, id)
+	if sqlErr != nil {
+		logger.Error("Database error updating job history with id", sqlErr)
+		return api_error.NewInternalServerError("Database error updating job history with id", nil)
+	}
+	sqlErr = tx.Commit()
+	if sqlErr != nil {
+		return api_error.NewInternalServerError("Database transaction error updating job history with id", nil)
+	}
+	return nil
 }

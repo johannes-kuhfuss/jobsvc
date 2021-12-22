@@ -111,7 +111,7 @@ type JobRepository interface {
 	DeleteById(string) api_error.ApiErr
 	GetNext() (*Job, api_error.ApiErr)
 	SetStatusById(string, dto.UpdateJobStatusRequest) api_error.ApiErr
-	//AddHistory(string, HistoryItem) api_error.ApiErr
+	SetHistoryById(string, dto.UpdateJobHistoryRequest) api_error.ApiErr
 }
 
 func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {

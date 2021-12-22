@@ -147,3 +147,25 @@ func (jh JobHandlers) SetStatusById(c *gin.Context) {
 	}
 	c.JSON(http.StatusNoContent, nil)
 }
+
+func (jh JobHandlers) SetHistoryById(c *gin.Context) {
+	jobId, err := getJobId(c.Param("job_id"))
+	if err != nil {
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	var updHistoryReq dto.UpdateJobHistoryRequest
+	if err := c.ShouldBindJSON(&updHistoryReq); err != nil {
+		logger.Error("invalid JSON body in update job history request", err)
+		apiErr := api_error.NewBadRequestError("invalid json body for job history update")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
+	err = jh.Service.SetHistoryById(jobId, updHistoryReq)
+	if err != nil {
+		logger.Error("Service error while changing job history by id", err)
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
