@@ -9,5 +9,5 @@ func mapUrls() {
 	cfg.RunTime.Router.PUT("jobs/:job_id/status", jobHandler.SetStatusById)
 	cfg.RunTime.Router.PUT("jobs/:job_id/history", jobHandler.SetHistoryById)
 	//cfg.RunTime.Router.PUT("jobs/:job_id/progress", jobHandler.SetProgressById)
-	//cfg.RunTime.Router.GET("/jobs/next", jobHandler.GetNextJob)
+	cfg.RunTime.Router.PUT("/jobs/dequeue", jobHandler.Dequeue)
 }

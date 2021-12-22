@@ -94,10 +94,17 @@ func (jh JobHandlers) DeleteJobById(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func (jh JobHandlers) GetNextJob(c *gin.Context) {
-	result, err := jh.Service.GetNextJob()
+func (jh JobHandlers) Dequeue(c *gin.Context) {
+	var dqReq dto.DequeueRequest
+	if err := c.ShouldBindJSON(&dqReq); err != nil {
+		logger.Error("invalid JSON body in dequeue request", err)
+		apiErr := api_error.NewBadRequestError("invalid json body for dequeue request")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
+	result, err := jh.Service.Dequeue(dqReq)
 	if err != nil {
-		logger.Error("Service error while getting next job", err)
+		logger.Error("Service error while dequeuing next job", err)
 		c.JSON(err.StatusCode(), err)
 		return
 	}

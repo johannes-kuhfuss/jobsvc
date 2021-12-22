@@ -109,7 +109,7 @@ type JobRepository interface {
 	//Search() (*[]Job, api_error.ApiErr)
 	Update(string, dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr)
 	DeleteById(string) api_error.ApiErr
-	GetNext() (*Job, api_error.ApiErr)
+	Dequeue(string) (*Job, api_error.ApiErr)
 	SetStatusById(string, string, string) api_error.ApiErr
 	SetHistoryById(string, string) api_error.ApiErr
 }

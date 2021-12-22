@@ -1,5 +1,6 @@
-Add progress
 Get next, but not GET 
+Refactor priority to int in DB
+Add progress
 Sanitize input
 Pagination
 Sort and filter

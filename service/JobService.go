@@ -14,7 +14,7 @@ type JobService interface {
 	GetAllJobs(string) (*[]dto.JobResponse, api_error.ApiErr)
 	GetJobById(string) (*dto.JobResponse, api_error.ApiErr)
 	DeleteJobById(string) api_error.ApiErr
-	GetNextJob() (*dto.JobResponse, api_error.ApiErr)
+	Dequeue(dto.DequeueRequest) (*dto.JobResponse, api_error.ApiErr)
 	UpdateJob(string, dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
 	SetStatusById(string, dto.UpdateJobStatusRequest) api_error.ApiErr
 	SetHistoryById(string, dto.UpdateJobHistoryRequest) api_error.ApiErr
@@ -74,8 +74,8 @@ func (s DefaultJobService) DeleteJobById(id string) api_error.ApiErr {
 	return nil
 }
 
-func (s DefaultJobService) GetNextJob() (*dto.JobResponse, api_error.ApiErr) {
-	job, err := s.repo.GetNext()
+func (s DefaultJobService) Dequeue(dqReq dto.DequeueRequest) (*dto.JobResponse, api_error.ApiErr) {
+	job, err := s.repo.Dequeue(dqReq.Type)
 	if err != nil {
 		return nil, err
 	}

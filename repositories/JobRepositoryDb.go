@@ -86,8 +86,34 @@ func (jrd JobRepositoryDb) DeleteById(id string) api_error.ApiErr {
 	return nil
 }
 
-func (jrd JobRepositoryDb) GetNext() (*domain.Job, api_error.ApiErr) {
-	panic("not implemented")
+func (jrd JobRepositoryDb) Dequeue(jobType string) (*domain.Job, api_error.ApiErr) {
+	conn := jrd.cfg.RunTime.DbConn
+	var nextJob domain.Job
+	var sqlErr error
+	var tx *sqlx.Tx
+
+	tx, sqlErr = conn.Beginx()
+	if sqlErr != nil {
+		return nil, api_error.NewInternalServerError("Database transaction error dequeuing next job", nil)
+	}
+	sqlErr = tx.Get(&nextJob, fmt.Sprintf("SELECT * FROM %v ORDER BY priority ASC, rank DESC limit 1", table))
+	if sqlErr != nil {
+		return nil, api_error.NewInternalServerError("Database error dequeuing next job", nil)
+	}
+	newHistory := nextJob.History
+	newHistory.AddNow("Dequeuing job for processing")
+	now := date.GetNowUtc()
+	sqlUpdate := "UPDATE joblist SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4"
+	_, sqlErr = tx.Exec(sqlUpdate, now, "running", newHistory, nextJob.Id.String())
+	if sqlErr != nil {
+		logger.Error("Database error updating job with id", sqlErr)
+		return nil, api_error.NewInternalServerError("Database error dequeuing next job", nil)
+	}
+	sqlErr = tx.Commit()
+	if sqlErr != nil {
+		return nil, api_error.NewInternalServerError("Database transaction error dequeuing next job", nil)
+	}
+	return &nextJob, nil
 }
 
 func (jrd JobRepositoryDb) SetStatusById(id string, newStatus string, message string) api_error.ApiErr {
