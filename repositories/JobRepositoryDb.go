@@ -96,9 +96,14 @@ func (jrd JobRepositoryDb) Dequeue(jobType string) (*domain.Job, api_error.ApiEr
 	if sqlErr != nil {
 		return nil, api_error.NewInternalServerError("Database transaction error dequeuing next job", nil)
 	}
-	sqlErr = tx.Get(&nextJob, fmt.Sprintf("SELECT * FROM %v ORDER BY priority ASC, rank DESC limit 1", table))
+	sqlErr = tx.Get(&nextJob, fmt.Sprintf("SELECT * FROM %v WHERE status = $1 ORDER BY priority ASC, rank DESC limit 1", table), "created")
 	if sqlErr != nil {
-		return nil, api_error.NewInternalServerError("Database error dequeuing next job", nil)
+		if sqlErr == sql.ErrNoRows {
+			logger.Info(fmt.Sprintf("No job found to dequeue for jobType %v", jobType))
+			return nil, api_error.NewNotFoundError(fmt.Sprintf("No job found to dequeue for jobType %v", jobType))
+		} else {
+			return nil, api_error.NewInternalServerError("Database error dequeuing next job", nil)
+		}
 	}
 	newHistory := nextJob.History
 	newHistory.AddNow("Dequeuing job for processing")
