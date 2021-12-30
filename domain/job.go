@@ -28,9 +28,9 @@ type Job struct {
 	Action        string      `db:"action"`
 	ActionDetails string      `db:"action_details"`
 	Progress      int32       `db:"progress"`
-	History       HistoryList `db:"history"`
+	History       string      `db:"history"`
 	ExtraData     string      `db:"extra_data"`
-	Priority      JobPriority `db:"priority"`
+	Priority      int32       `db:"priority"`
 	Rank          int32       `db:"rank"`
 }
 
@@ -50,10 +50,9 @@ func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {
 		return nil, api_error.NewBadRequestError("Job must have a type")
 	}
 
-	var history HistoryList
-	history.AddNow("Job created")
+	prio, _ := JobPriority.AsIndex("medium")
 
-	return &Job{
+	newJob := Job{
 		Id:            ksuid.New(),
 		CorrelationId: "",
 		Name:          createJobName(jobName),
@@ -69,11 +68,13 @@ func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {
 		Action:        "",
 		ActionDetails: "",
 		Progress:      0,
-		History:       history,
+		History:       "",
 		ExtraData:     "",
-		Priority:      PriorityMedium,
+		Priority:      prio,
 		Rank:          0,
-	}, nil
+	}
+	newJob.AddHistory("Job created")
+	return &newJob, nil
 }
 
 func createJobName(name string) string {
@@ -87,7 +88,19 @@ func createJobName(name string) string {
 	return jobName
 }
 
+func (j *Job) AddHistory(msg string) {
+	var sb strings.Builder
+	now, _ := date.GetNowLocalString("")
+	sb.WriteString(j.History)
+	sb.WriteString(*now)
+	sb.WriteString(": ")
+	sb.WriteString(msg)
+	sb.WriteString("\n")
+	j.History = sb.String()
+}
+
 func (j *Job) ToJobResponseDto() dto.JobResponse {
+	prio, _ := JobPriority.AsValue(j.Priority)
 	return dto.JobResponse{
 		Id:            j.Id.String(),
 		CorrelationId: j.CorrelationId,
@@ -104,9 +117,9 @@ func (j *Job) ToJobResponseDto() dto.JobResponse {
 		Action:        j.Action,
 		ActionDetails: j.ActionDetails,
 		Progress:      j.Progress,
-		History:       j.History.ToString(),
+		History:       j.History,
 		ExtraData:     j.ExtraData,
-		Priority:      string(j.Priority),
+		Priority:      prio,
 		Rank:          j.Rank,
 	}
 }
@@ -116,6 +129,10 @@ func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error
 	if err != nil {
 		return nil, err
 	}
+	prio, err := JobPriority.AsIndex(jobReq.Priority)
+	if err != nil {
+		return nil, api_error.NewBadRequestError(fmt.Sprintf("Priority value %v does not exist", jobReq.Priority))
+	}
 	newJob.CorrelationId = jobReq.CorrelationId
 	newJob.Source = jobReq.Source
 	newJob.Destination = jobReq.Destination
@@ -123,7 +140,7 @@ func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error
 	newJob.Action = jobReq.Action
 	newJob.ActionDetails = jobReq.ActionDetails
 	newJob.ExtraData = jobReq.ExtraData
-	newJob.Priority = JobPriority(jobReq.Priority)
+	newJob.Priority = prio
 	if (jobReq.Rank >= 0) && (jobReq.Rank < math.MaxInt32) {
 		newJob.Rank = jobReq.Rank
 	} else {

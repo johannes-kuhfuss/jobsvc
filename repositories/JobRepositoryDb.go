@@ -66,8 +66,8 @@ func (jrd JobRepositoryDb) FindById(id string) (*domain.Job, api_error.ApiErr) {
 
 func (jrd JobRepositoryDb) Store(job domain.Job) api_error.ApiErr {
 	conn := jrd.cfg.RunTime.DbConn
-	sqlInsert := "INSERT INTO joblist (id, correlation_id, name, created_at, created_by, modified_at, modified_by, status, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)"
-	_, err := conn.Exec(sqlInsert, job.Id.String(), job.CorrelationId, job.Name, job.CreatedAt, job.CreatedBy, job.ModifiedAt, job.ModifiedBy, job.Status, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.History, job.ExtraData, job.Priority, job.Rank)
+	sqlInsert := "INSERT INTO joblist (id, correlation_id, name, created_at, created_by, modified_at, modified_by, status, source, destination, type, sub_type, action, action_details, progress, history, extra_data, priority, rank) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)"
+	_, err := conn.Exec(sqlInsert, job.Id.String(), job.CorrelationId, job.Name, job.CreatedAt, job.CreatedBy, job.ModifiedAt, job.ModifiedBy, job.Status, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.Progress, job.History, job.ExtraData, job.Priority, job.Rank)
 	if err != nil {
 		logger.Error("Database error storing new job", err)
 		return api_error.NewInternalServerError("Database error storing new job", nil)
@@ -105,11 +105,10 @@ func (jrd JobRepositoryDb) Dequeue(jobType string) (*domain.Job, api_error.ApiEr
 			return nil, api_error.NewInternalServerError("Database error dequeuing next job", nil)
 		}
 	}
-	newHistory := nextJob.History
-	newHistory.AddNow("Dequeuing job for processing")
+	nextJob.AddHistory("Dequeuing job for processing")
 	now := date.GetNowUtc()
 	sqlUpdate := "UPDATE joblist SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4"
-	_, sqlErr = tx.Exec(sqlUpdate, now, "running", newHistory, nextJob.Id.String())
+	_, sqlErr = tx.Exec(sqlUpdate, now, "running", nextJob.History, nextJob.Id.String())
 	if sqlErr != nil {
 		logger.Error("Database error updating job with id", sqlErr)
 		return nil, api_error.NewInternalServerError("Database error dequeuing next job", nil)
@@ -135,11 +134,10 @@ func (jrd JobRepositoryDb) SetStatusById(id string, newStatus string, message st
 	if sqlErr != nil {
 		return api_error.NewInternalServerError("Database error updating job status with id", nil)
 	}
-	newHistory := oldJob.History
-	newHistory.AddNow(message)
+	oldJob.AddHistory(message)
 	sqlUpdate := "UPDATE joblist SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4"
 	now := date.GetNowUtc()
-	_, sqlErr = tx.Exec(sqlUpdate, now, newStatus, newHistory, id)
+	_, sqlErr = tx.Exec(sqlUpdate, now, newStatus, oldJob.History, id)
 	if sqlErr != nil {
 		logger.Error("Database error updating job with id", sqlErr)
 		return api_error.NewInternalServerError("Database error updating job status with id", nil)
@@ -247,8 +245,12 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 		mergedJob.ExtraData = oldJob.ExtraData
 	}
 	if updJobReq.Priority != "" {
-		mergedJob.Priority = domain.JobPriority(updJobReq.Priority)
-		changed["Priority"] = string(domain.JobPriority(updJobReq.Priority))
+		prio, err := domain.JobPriority.AsIndex(updJobReq.Priority)
+		if err != nil {
+			return nil, api_error.NewBadRequestError(fmt.Sprintf("Priority value %v does not exist", updJobReq.Priority))
+		}
+		mergedJob.Priority = prio
+		changed["Priority"] = updJobReq.Priority
 	} else {
 		mergedJob.Priority = oldJob.Priority
 	}
@@ -259,13 +261,12 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 		mergedJob.Rank = oldJob.Rank
 	}
 
-	newHistory := oldJob.History
 	var changedStr string
 	for k, v := range changed {
 		changedStr = fmt.Sprintf("%v%v: %v; ", changedStr, k, v)
 	}
-	newHistory.AddNow(fmt.Sprintf("Job data changed. New Data: %v", changedStr))
-	mergedJob.History = newHistory
+	oldJob.AddHistory(fmt.Sprintf("Job data changed. New Data: %v", changedStr))
+	mergedJob.History = oldJob.History
 
 	return &mergedJob, nil
 }
@@ -284,11 +285,10 @@ func (jrd JobRepositoryDb) SetHistoryById(id string, message string) api_error.A
 	if sqlErr != nil {
 		return api_error.NewInternalServerError("Database error updating job history with id", nil)
 	}
-	newHistory := oldJob.History
-	newHistory.AddNow(message)
+	oldJob.AddHistory(message)
 	sqlUpdate := "UPDATE joblist SET (modified_at, history) = ($1, $2) WHERE id = $3"
 	now := date.GetNowUtc()
-	_, sqlErr = tx.Exec(sqlUpdate, now, newHistory, id)
+	_, sqlErr = tx.Exec(sqlUpdate, now, oldJob.History, id)
 	if sqlErr != nil {
 		logger.Error("Database error updating job history with id", sqlErr)
 		return api_error.NewInternalServerError("Database error updating job history with id", nil)

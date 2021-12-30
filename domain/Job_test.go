@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -27,17 +28,23 @@ func isNowDate(t1, t2 time.Time) bool {
 }
 
 func TestConstants(t *testing.T) {
+	rt, _ := JobPriority.ItemByIndex(0)
+	hi, _ := JobPriority.ItemByIndex(1)
+	md, _ := JobPriority.ItemByIndex(2)
+	lo, _ := JobPriority.ItemByIndex(3)
+	id, _ := JobPriority.ItemByIndex(4)
+
 	assert.EqualValues(t, StatusCreated, "created")
 	assert.EqualValues(t, StatusQueued, "queued")
 	assert.EqualValues(t, StatusRunning, "running")
 	assert.EqualValues(t, StatusPaused, "paused")
 	assert.EqualValues(t, StatusFinished, "finished")
 	assert.EqualValues(t, StatusFailed, "failed")
-	assert.EqualValues(t, PriorityRealtime, "realtime")
-	assert.EqualValues(t, PriorityHigh, "high")
-	assert.EqualValues(t, PriorityMedium, "medium")
-	assert.EqualValues(t, PriorityLow, "low")
-	assert.EqualValues(t, PriorityIdle, "idle")
+	assert.EqualValues(t, rt.Val, "realtime")
+	assert.EqualValues(t, hi.Val, "high")
+	assert.EqualValues(t, md.Val, "medium")
+	assert.EqualValues(t, lo.Val, "low")
+	assert.EqualValues(t, id.Val, "idle")
 }
 
 func Test_CreateJobName_EmptyName_ReturnsGeneratedName(t *testing.T) {
@@ -81,9 +88,9 @@ func Test_NewJob_WithJobType_ReturnsNewJob(t *testing.T) {
 	assert.Empty(t, newJob.SubType)
 	assert.Empty(t, newJob.Action)
 	assert.Empty(t, newJob.ActionDetails)
-	assert.Contains(t, newJob.History.ToString(), "Job created")
+	assert.Contains(t, newJob.History, "Job created")
 	assert.Empty(t, newJob.ExtraData)
-	assert.EqualValues(t, PriorityMedium, newJob.Priority)
+	assert.EqualValues(t, 2, newJob.Priority)
 	assert.EqualValues(t, 0, newJob.Rank)
 }
 
@@ -93,6 +100,7 @@ func Test_ToJobResponseDto_Returns_JobResponseDto(t *testing.T) {
 	newJob, _ := NewJob(jobName, jobType)
 	fillJob(newJob)
 	jobResp := newJob.ToJobResponseDto()
+	prio, _ := JobPriority.AsValue(newJob.Priority)
 
 	assert.NotNil(t, jobResp)
 	assert.True(t, isValidKSUIDString(jobResp.Id))
@@ -110,9 +118,9 @@ func Test_ToJobResponseDto_Returns_JobResponseDto(t *testing.T) {
 	assert.EqualValues(t, newJob.SubType, jobResp.SubType)
 	assert.EqualValues(t, newJob.Action, jobResp.Action)
 	assert.EqualValues(t, newJob.ActionDetails, jobResp.ActionDetails)
-	assert.EqualValues(t, newJob.History.ToString(), jobResp.History)
+	assert.EqualValues(t, newJob.History, jobResp.History)
 	assert.EqualValues(t, newJob.ExtraData, jobResp.ExtraData)
-	assert.EqualValues(t, string(newJob.Priority), jobResp.Priority)
+	assert.EqualValues(t, prio, jobResp.Priority)
 	assert.EqualValues(t, newJob.Rank, jobResp.Rank)
 }
 
@@ -148,6 +156,17 @@ func Test_NewJobFromJobRequestDto_InvalidRank_SetsRankToZero(t *testing.T) {
 	assert.EqualValues(t, 0, newJob.Rank)
 }
 
+func Test_NewJobFromJobRequestDto_InvalidPriority_Returns_BadRequestError(t *testing.T) {
+	newJobReq := fillJobRequest()
+	newJobReq.Priority = "bogus"
+	newJob, err := NewJobFromJobRequestDto(newJobReq)
+
+	assert.Nil(t, newJob)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, fmt.Sprintf("Priority value %v does not exist", newJobReq.Priority), err.Message())
+}
+
 func fillJobRequest() dto.CreateUpdateJobRequest {
 	return dto.CreateUpdateJobRequest{
 		CorrelationId: "corr id",
@@ -167,6 +186,7 @@ func fillJobRequest() dto.CreateUpdateJobRequest {
 func Test_NewJobFromJobRequestDto_ValidValues(t *testing.T) {
 	newJobReq := fillJobRequest()
 	newJob, err := NewJobFromJobRequestDto(newJobReq)
+	prio, _ := JobPriority.AsIndex(newJobReq.Priority)
 
 	assert.NotNil(t, newJob)
 	assert.Nil(t, err)
@@ -179,6 +199,6 @@ func Test_NewJobFromJobRequestDto_ValidValues(t *testing.T) {
 	assert.EqualValues(t, newJobReq.Action, newJob.Action)
 	assert.EqualValues(t, newJobReq.ActionDetails, newJob.ActionDetails)
 	assert.EqualValues(t, newJobReq.ExtraData, newJob.ExtraData)
-	assert.EqualValues(t, newJobReq.Priority, string(newJob.Priority))
+	assert.EqualValues(t, prio, newJob.Priority)
 	assert.EqualValues(t, newJobReq.Rank, newJob.Rank)
 }

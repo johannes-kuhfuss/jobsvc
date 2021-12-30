@@ -16,7 +16,7 @@ CREATE TABLE joblist (
 	"action" varchar NULL,
 	"action_details" varchar NULL,
 	"progress" int4 NULL,
-	"history" jsonb NULL,
+	"history" varchar NULL,
 	"extra_data" varchar NULL,
 	"priority" int4 NULL,
 	"rank" int4 NULL,
