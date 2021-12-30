@@ -1,5 +1,4 @@
-Refactor priority to int in DB
-Add progress
+validate and sanitize inputs (especially priority strings)
 Sanitize input
 Pagination
 Sort and filter
@@ -8,3 +7,4 @@ Library to parse url params?
 Return value count as header
 get status
 get history
+set priority
