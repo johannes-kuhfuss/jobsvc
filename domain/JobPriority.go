@@ -1,6 +1,8 @@
 package domain
 
-import "github.com/johannes-kuhfuss/services_utils/enums"
+import (
+	"github.com/johannes-kuhfuss/services_utils/enums"
+)
 
 var (
 	JobPriority = enums.Enum{
@@ -8,3 +10,8 @@ var (
 	}
 	DefaultJobPriority int32 = 2
 )
+
+func IsValidPriority(prio string) bool {
+	_, err := JobPriority.ItemByValue(prio)
+	return err == nil
+}

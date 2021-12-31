@@ -13,8 +13,7 @@ func validateCreateUpdateJobRequest(newReq dto.CreateUpdateJobRequest) api_error
 		return api_error.NewBadRequestError("job must have a type")
 	}
 	if newReq.Priority != "" {
-		_, err := domain.JobPriority.ItemByValue(newReq.Priority)
-		if err != nil {
+		if !domain.IsValidPriority(newReq.Priority) {
 			return api_error.NewBadRequestError(fmt.Sprintf("priority value %v does not exist", newReq.Priority))
 		}
 	}
