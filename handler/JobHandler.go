@@ -36,6 +36,13 @@ func (jh *JobHandlers) CreateJob(c *gin.Context) {
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&newJobReq)
+	err := validateCreateUpdateJobRequest(newJobReq)
+	if err != nil {
+		logger.Error("could not validate input data for create", err)
+		apiErr := api_error.NewBadRequestError("could not validate input data for create")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
 	result, err := jh.Service.CreateJob(newJobReq)
 	if err != nil {
 		logger.Error("Service error while creating job", err)
@@ -96,6 +103,13 @@ func (jh JobHandlers) Dequeue(c *gin.Context) {
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&dqReq)
+	err := validateDequeueRequest(dqReq)
+	if err != nil {
+		logger.Error("could not validate input data for dequeue", err)
+		apiErr := api_error.NewBadRequestError("could not validate input data for dequeue")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
 	result, err := jh.Service.Dequeue(dqReq)
 	if err != nil {
 		logger.Error("Service error while dequeuing next job", err)
@@ -119,6 +133,13 @@ func (jh JobHandlers) UpdateJob(c *gin.Context) {
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&updJobReq)
+	err = validateCreateUpdateJobRequest(updJobReq)
+	if err != nil {
+		logger.Error("could not validate input data for update", err)
+		apiErr := api_error.NewBadRequestError("could not validate input data for update")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
 	result, err := jh.Service.UpdateJob(jobId, updJobReq)
 	if err != nil {
 		logger.Error("Service error while updating job", err)
@@ -142,6 +163,13 @@ func (jh JobHandlers) SetStatusById(c *gin.Context) {
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&updStatusReq)
+	err = validateUpdateJobStatusRequest(updStatusReq)
+	if err != nil {
+		logger.Error("could not validate input data for update status", err)
+		apiErr := api_error.NewBadRequestError("could not validate input data for update status")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
 	err = jh.Service.SetStatusById(jobId, updStatusReq)
 	if err != nil {
 		logger.Error("Service error while changing job status by id", err)
@@ -165,6 +193,13 @@ func (jh JobHandlers) SetHistoryById(c *gin.Context) {
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&updHistoryReq)
+	err = validateUpdateJobHistoryRequest(updHistoryReq)
+	if err != nil {
+		logger.Error("could not validate input data for update history", err)
+		apiErr := api_error.NewBadRequestError("could not validate input data for update history")
+		c.JSON(apiErr.StatusCode(), apiErr)
+		return
+	}
 	err = jh.Service.SetHistoryById(jobId, updHistoryReq)
 	if err != nil {
 		logger.Error("Service error while changing job history by id", err)

@@ -245,10 +245,7 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 		mergedJob.ExtraData = oldJob.ExtraData
 	}
 	if updJobReq.Priority != "" {
-		prio, err := domain.JobPriority.AsIndex(updJobReq.Priority)
-		if err != nil {
-			return nil, api_error.NewBadRequestError(fmt.Sprintf("Priority value %v does not exist", updJobReq.Priority))
-		}
+		prio, _ := domain.JobPriority.AsIndex(updJobReq.Priority)
 		mergedJob.Priority = prio
 		changed["Priority"] = updJobReq.Priority
 	} else {

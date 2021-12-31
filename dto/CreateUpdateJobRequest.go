@@ -10,6 +10,6 @@ type CreateUpdateJobRequest struct {
 	Action        string `json:"action" san:"trim,xss"`
 	ActionDetails string `json:"actionDetails" san:"trim,xss"`
 	ExtraData     string `json:"extraData" san:"trim,xss"`
-	Priority      string `json:"priority" san:"trim,xss"`
+	Priority      string `json:"priority" san:"trim,xss,lower`
 	Rank          int32  `json:"rank" san:"def=0,min=0,max=2147483647"`
 }
