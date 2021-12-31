@@ -130,7 +130,10 @@ func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error
 		return nil, err
 	}
 	if jobReq.Priority != "" {
-		prio, _ = JobPriority.AsIndex(jobReq.Priority)
+		prio, err = JobPriority.AsIndex(jobReq.Priority)
+		if err != nil {
+			return nil, api_error.NewBadRequestError(fmt.Sprintf("Priority value %v does not exist", jobReq.Priority))
+		}
 	} else {
 		prio = DefaultJobPriority
 	}
@@ -142,6 +145,11 @@ func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error
 	newJob.ActionDetails = jobReq.ActionDetails
 	newJob.ExtraData = jobReq.ExtraData
 	newJob.Priority = prio
-	newJob.Rank = jobReq.Rank
+	if jobReq.Rank >= 0 {
+		newJob.Rank = jobReq.Rank
+	} else {
+		newJob.Rank = 0
+	}
+
 	return newJob, nil
 }

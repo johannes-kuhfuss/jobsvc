@@ -167,6 +167,16 @@ func Test_NewJobFromJobRequestDto_InvalidPriority_Returns_BadRequestError(t *tes
 	assert.EqualValues(t, fmt.Sprintf("Priority value %v does not exist", newJobReq.Priority), err.Message())
 }
 
+func Test_NewJobFromJobRequestDto_EmptyPriority_Returns_DefaultPriorty(t *testing.T) {
+	newJobReq := fillJobRequest()
+	newJobReq.Priority = ""
+	newJob, err := NewJobFromJobRequestDto(newJobReq)
+
+	assert.NotNil(t, newJob)
+	assert.Nil(t, err)
+	assert.EqualValues(t, DefaultJobPriority, newJob.Priority)
+}
+
 func fillJobRequest() dto.CreateUpdateJobRequest {
 	return dto.CreateUpdateJobRequest{
 		CorrelationId: "corr id",
