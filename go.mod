@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/gin-gonic/gin v1.7.7
+	github.com/go-sanitize/sanitize v1.0.1
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/johannes-kuhfuss/services_utils v1.0.10
 	github.com/joho/godotenv v1.4.0

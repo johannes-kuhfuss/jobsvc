@@ -4,28 +4,21 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/jobsvc/service"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/segmentio/ksuid"
 )
 
 type JobHandlers struct {
 	Service service.JobService
+	Cfg     *config.AppConfig
 }
 
-var (
-	policy *bluemonday.Policy
-)
-
-func init() {
-	policy = bluemonday.UGCPolicy()
-}
-
-func getJobId(jobIdParam string) (string, api_error.ApiErr) {
-	jobIdParam = policy.Sanitize(jobIdParam)
+func (jh *JobHandlers) getJobId(jobIdParam string) (string, api_error.ApiErr) {
+	jobIdParam = jh.Cfg.RunTime.BmPolicy.Sanitize(jobIdParam)
 	jobId, err := ksuid.Parse(jobIdParam)
 	if err != nil {
 		logger.Error("User Id should be a ksuid", err)
@@ -42,7 +35,7 @@ func (jh *JobHandlers) CreateJob(c *gin.Context) {
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
-	newJobReq.Name = policy.Sanitize(newJobReq.Name)
+	jh.Cfg.RunTime.Sani.Sanitize(&newJobReq)
 	result, err := jh.Service.CreateJob(newJobReq)
 	if err != nil {
 		logger.Error("Service error while creating job", err)
@@ -54,7 +47,7 @@ func (jh *JobHandlers) CreateJob(c *gin.Context) {
 
 func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
 	status, _ := c.GetQuery("status")
-	status = policy.Sanitize(status)
+	status = jh.Cfg.RunTime.BmPolicy.Sanitize(status)
 	jobs, err := jh.Service.GetAllJobs(status)
 	if err != nil {
 		logger.Error("Service error while getting all jobs", err)
@@ -65,7 +58,7 @@ func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
 }
 
 func (jh *JobHandlers) GetJobById(c *gin.Context) {
-	jobId, err := getJobId(c.Param("job_id"))
+	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
 		return
@@ -80,7 +73,7 @@ func (jh *JobHandlers) GetJobById(c *gin.Context) {
 }
 
 func (jh JobHandlers) DeleteJobById(c *gin.Context) {
-	jobId, err := getJobId(c.Param("job_id"))
+	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
 		return
@@ -102,6 +95,7 @@ func (jh JobHandlers) Dequeue(c *gin.Context) {
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
+	jh.Cfg.RunTime.Sani.Sanitize(&dqReq)
 	result, err := jh.Service.Dequeue(dqReq)
 	if err != nil {
 		logger.Error("Service error while dequeuing next job", err)
@@ -112,7 +106,7 @@ func (jh JobHandlers) Dequeue(c *gin.Context) {
 }
 
 func (jh JobHandlers) UpdateJob(c *gin.Context) {
-	jobId, err := getJobId(c.Param("job_id"))
+	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
 		return
@@ -124,6 +118,7 @@ func (jh JobHandlers) UpdateJob(c *gin.Context) {
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
+	jh.Cfg.RunTime.Sani.Sanitize(&updJobReq)
 	result, err := jh.Service.UpdateJob(jobId, updJobReq)
 	if err != nil {
 		logger.Error("Service error while updating job", err)
@@ -134,7 +129,7 @@ func (jh JobHandlers) UpdateJob(c *gin.Context) {
 }
 
 func (jh JobHandlers) SetStatusById(c *gin.Context) {
-	jobId, err := getJobId(c.Param("job_id"))
+	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
 		return
@@ -146,6 +141,7 @@ func (jh JobHandlers) SetStatusById(c *gin.Context) {
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
+	jh.Cfg.RunTime.Sani.Sanitize(&updStatusReq)
 	err = jh.Service.SetStatusById(jobId, updStatusReq)
 	if err != nil {
 		logger.Error("Service error while changing job status by id", err)
@@ -156,7 +152,7 @@ func (jh JobHandlers) SetStatusById(c *gin.Context) {
 }
 
 func (jh JobHandlers) SetHistoryById(c *gin.Context) {
-	jobId, err := getJobId(c.Param("job_id"))
+	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
 		return
@@ -168,6 +164,7 @@ func (jh JobHandlers) SetHistoryById(c *gin.Context) {
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
+	jh.Cfg.RunTime.Sani.Sanitize(&updHistoryReq)
 	err = jh.Service.SetHistoryById(jobId, updHistoryReq)
 	if err != nil {
 		logger.Error("Service error while changing job history by id", err)

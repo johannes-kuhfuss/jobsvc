@@ -4,12 +4,15 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-sanitize/sanitize"
 	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/handler"
 	"github.com/johannes-kuhfuss/jobsvc/repositories"
 	"github.com/johannes-kuhfuss/jobsvc/service"
+	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -32,9 +35,32 @@ func StartApp() {
 	initDb()
 	wireApp()
 	mapUrls()
+	err = createSanitizer()
+	if err != nil {
+		panic(err)
+	}
+	err = createBmPolicy()
+	if err != nil {
+		panic(err)
+	}
 	startRouter()
 	cfg.RunTime.DbConn.Close()
 	logger.Info("Application ended")
+}
+
+func createSanitizer() api_error.ApiErr {
+	sani, err := sanitize.New()
+	if err != nil {
+		logger.Error("error creating sanitizer", err)
+		return api_error.NewInternalServerError("error while creatign sanitizer", err)
+	}
+	cfg.RunTime.Sani = sani
+	return nil
+}
+
+func createBmPolicy() api_error.ApiErr {
+	cfg.RunTime.BmPolicy = bluemonday.UGCPolicy()
+	return nil
 }
 
 func initRouter() {
@@ -62,6 +88,7 @@ func wireApp() {
 	jobService = service.NewJobService(jobRepo)
 	jobHandler = handler.JobHandlers{
 		Service: jobService,
+		Cfg:     &cfg,
 	}
 }
 

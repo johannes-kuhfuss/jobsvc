@@ -2,11 +2,13 @@ package config
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-sanitize/sanitize"
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 type AppConfig struct {
@@ -26,8 +28,10 @@ type AppConfig struct {
 		Name     string `envconfig:"DB_NAME" required:"true"`
 	}
 	RunTime struct {
-		Router *gin.Engine
-		DbConn *sqlx.DB
+		Router   *gin.Engine
+		DbConn   *sqlx.DB
+		Sani     *sanitize.Sanitizer
+		BmPolicy *bluemonday.Policy
 	}
 }
 
