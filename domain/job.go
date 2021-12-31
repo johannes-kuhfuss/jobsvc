@@ -33,6 +33,7 @@ type Job struct {
 	Rank          int32       `db:"rank"`
 }
 
+//go:generate mockgen -destination=../mocks/domain/mockJobRepository.go -package=domain github.com/johannes-kuhfuss/jobsvc/domain JobRepository
 type JobRepository interface {
 	Store(Job) api_error.ApiErr
 	FindAll(string) (*[]Job, api_error.ApiErr)

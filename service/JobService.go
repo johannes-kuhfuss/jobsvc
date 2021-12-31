@@ -9,6 +9,7 @@ import (
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 )
 
+//go:generate mockgen -destination=../mocks/service/mockJobService.go -package=service github.com/johannes-kuhfuss/jobsvc/service JobService
 type JobService interface {
 	CreateJob(dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
 	GetAllJobs(string) (*[]dto.JobResponse, api_error.ApiErr)
