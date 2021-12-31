@@ -102,16 +102,12 @@ func (s DefaultJobService) SetStatusById(id string, statusReq dto.UpdateJobStatu
 	if err != nil {
 		return api_error.NewNotFoundError(fmt.Sprintf("Job with id %v does not exist", id))
 	}
-	statusVal := string(domain.JobStatus(statusReq.Status))
-	if strings.TrimSpace(statusVal) == "" {
-		return api_error.NewBadRequestError(fmt.Sprintf("Wrong status value %v when updating job status", statusVal))
-	}
 	if strings.TrimSpace(statusReq.Message) == "" {
-		message = fmt.Sprintf("Job status changed. New status: %v", statusVal)
+		message = fmt.Sprintf("Job status changed. New status: %v", statusReq.Status)
 	} else {
-		message = fmt.Sprintf("Job status changed. New status: %v; %v", statusVal, statusReq.Message)
+		message = fmt.Sprintf("Job status changed. New status: %v; %v", statusReq.Status, statusReq.Message)
 	}
-	err = s.repo.SetStatusById(id, statusVal, message)
+	err = s.repo.SetStatusById(id, statusReq.Status, message)
 	if err != nil {
 		return err
 	}
@@ -122,9 +118,6 @@ func (s DefaultJobService) SetHistoryById(id string, historyReq dto.UpdateJobHis
 	_, err := s.GetJobById(id)
 	if err != nil {
 		return api_error.NewNotFoundError(fmt.Sprintf("Job with id %v does not exist", id))
-	}
-	if strings.TrimSpace(historyReq.Message) == "" {
-		return api_error.NewBadRequestError("Empty message when updating job history")
 	}
 	err = s.repo.SetHistoryById(id, historyReq.Message)
 	if err != nil {
