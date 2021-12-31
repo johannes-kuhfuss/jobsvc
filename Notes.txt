@@ -1,10 +1,6 @@
-validate and sanitize inputs (especially priority strings)
-Sanitize input
+Unit tests
 Pagination
 Sort and filter
 Let user choose return values
 Library to parse url params?
 Return value count as header
-get status
-get history
-set priority

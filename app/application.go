@@ -10,7 +10,6 @@ import (
 	"github.com/johannes-kuhfuss/jobsvc/handler"
 	"github.com/johannes-kuhfuss/jobsvc/repositories"
 	"github.com/johannes-kuhfuss/jobsvc/service"
-	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/microcosm-cc/bluemonday"
 
@@ -35,32 +34,24 @@ func StartApp() {
 	initDb()
 	wireApp()
 	mapUrls()
-	err = createSanitizer()
-	if err != nil {
-		panic(err)
-	}
-	err = createBmPolicy()
-	if err != nil {
-		panic(err)
-	}
+	createSanitizer()
+	createBmPolicy()
 	startRouter()
 	cfg.RunTime.DbConn.Close()
 	logger.Info("Application ended")
 }
 
-func createSanitizer() api_error.ApiErr {
+func createSanitizer() {
 	sani, err := sanitize.New()
 	if err != nil {
 		logger.Error("error creating sanitizer", err)
-		return api_error.NewInternalServerError("error while creatign sanitizer", err)
+		panic(err)
 	}
 	cfg.RunTime.Sani = sani
-	return nil
 }
 
-func createBmPolicy() api_error.ApiErr {
+func createBmPolicy() {
 	cfg.RunTime.BmPolicy = bluemonday.UGCPolicy()
-	return nil
 }
 
 func initRouter() {
@@ -77,7 +68,7 @@ func initDb() {
 	connUrl := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", cfg.Db.Host, cfg.Db.Port, cfg.Db.Username, cfg.Db.Password, cfg.Db.Name)
 	conn, err := sqlx.Connect("postgres", connUrl)
 	if err != nil {
-		logger.Error("Could not connect to database.", err)
+		logger.Error("Could not connect to database", err)
 		panic(err)
 	}
 	cfg.RunTime.DbConn = conn
