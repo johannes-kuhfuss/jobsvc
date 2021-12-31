@@ -40,8 +40,8 @@ func (s DefaultJobService) GetAllJobs(status string) (*[]dto.JobResponse, api_er
 	return &response, nil
 }
 
-func (s DefaultJobService) CreateJob(jobreq dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr) {
-	newJob, err := domain.NewJob(jobreq.Name, jobreq.Type)
+func (s DefaultJobService) CreateJob(jobReq dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr) {
+	newJob, err := domain.NewJobFromJobRequestDto(jobReq)
 	if err != nil {
 		return nil, err
 	}

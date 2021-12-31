@@ -10,8 +10,3 @@ const (
 	StatusFinished JobStatus = "finished"
 	StatusFailed   JobStatus = "failed"
 )
-
-type JobStatusUpdate struct {
-	newStatus JobStatus
-	errMsg    string
-}

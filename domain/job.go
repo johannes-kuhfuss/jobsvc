@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -125,13 +124,15 @@ func (j *Job) ToJobResponseDto() dto.JobResponse {
 }
 
 func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr) {
+	var prio int32
 	newJob, err := NewJob(jobReq.Name, jobReq.Type)
 	if err != nil {
 		return nil, err
 	}
-	prio, err := JobPriority.AsIndex(jobReq.Priority)
-	if err != nil {
-		return nil, api_error.NewBadRequestError(fmt.Sprintf("Priority value %v does not exist", jobReq.Priority))
+	if jobReq.Priority != "" {
+		prio, _ = JobPriority.AsIndex(jobReq.Priority)
+	} else {
+		prio = DefaultJobPriority
 	}
 	newJob.CorrelationId = jobReq.CorrelationId
 	newJob.Source = jobReq.Source
@@ -141,10 +142,6 @@ func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error
 	newJob.ActionDetails = jobReq.ActionDetails
 	newJob.ExtraData = jobReq.ExtraData
 	newJob.Priority = prio
-	if (jobReq.Rank >= 0) && (jobReq.Rank < math.MaxInt32) {
-		newJob.Rank = jobReq.Rank
-	} else {
-		newJob.Rank = 0
-	}
+	newJob.Rank = jobReq.Rank
 	return newJob, nil
 }
