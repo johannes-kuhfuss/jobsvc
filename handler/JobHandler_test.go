@@ -330,3 +330,42 @@ func Test_Dequeue_Returns_InvalidInputError(t *testing.T) {
 	assert.EqualValues(t, http.StatusBadRequest, recorder.Code)
 	assert.EqualValues(t, errorJson, recorder.Body.String())
 }
+
+func Test_Dequeue_Returns_ServiceError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	apiError := api_error.NewInternalServerError("database error", nil)
+	errorJson, _ := json.Marshal(apiError)
+	req := dto.DequeueRequest{
+		Type: "Encoding",
+	}
+	bodyJson, _ := json.Marshal(req)
+	router.PUT("/jobs/dequeue", jh.Dequeue)
+	request, _ := http.NewRequest(http.MethodPut, "/jobs/dequeue", strings.NewReader(string(bodyJson)))
+	mockService.EXPECT().Dequeue(req).Return(nil, apiError)
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusInternalServerError, recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
+func Test_Dequeue_Returns_NoError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	req := dto.DequeueRequest{
+		Type: "Encoding",
+	}
+	bodyJson, _ := json.Marshal(req)
+	newJob, _ := domain.NewJob("Job 1", "Encoding")
+	jobResp := newJob.ToJobResponseDto()
+	respJson, _ := json.Marshal(jobResp)
+	router.PUT("/jobs/dequeue", jh.Dequeue)
+	request, _ := http.NewRequest(http.MethodPut, "/jobs/dequeue", strings.NewReader(string(bodyJson)))
+	mockService.EXPECT().Dequeue(req).Return(&jobResp, nil)
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusOK, recorder.Code)
+	assert.EqualValues(t, respJson, recorder.Body.String())
+}
