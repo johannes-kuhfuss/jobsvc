@@ -8,10 +8,19 @@ import (
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 )
 
-func validateCreateUpdateJobRequest(newReq dto.CreateUpdateJobRequest) api_error.ApiErr {
+func validateCreateJobRequest(newReq dto.CreateUpdateJobRequest) api_error.ApiErr {
 	if newReq.Type == "" {
 		return api_error.NewBadRequestError("job must have a type")
 	}
+	if newReq.Priority != "" {
+		if !domain.IsValidPriority(newReq.Priority) {
+			return api_error.NewBadRequestError(fmt.Sprintf("priority value %v does not exist", newReq.Priority))
+		}
+	}
+	return nil
+}
+
+func validateUpdateJobRequest(newReq dto.CreateUpdateJobRequest) api_error.ApiErr {
 	if newReq.Priority != "" {
 		if !domain.IsValidPriority(newReq.Priority) {
 			return api_error.NewBadRequestError(fmt.Sprintf("priority value %v does not exist", newReq.Priority))

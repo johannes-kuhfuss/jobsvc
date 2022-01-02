@@ -36,7 +36,7 @@ func (jh *JobHandlers) CreateJob(c *gin.Context) {
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&newJobReq)
-	err := validateCreateUpdateJobRequest(newJobReq)
+	err := validateCreateJobRequest(newJobReq)
 	if err != nil {
 		logger.Error("could not validate input data for create", err)
 		apiErr := api_error.NewBadRequestError("could not validate input data for create")
@@ -133,7 +133,7 @@ func (jh JobHandlers) UpdateJob(c *gin.Context) {
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&updJobReq)
-	err = validateCreateUpdateJobRequest(updJobReq)
+	err = validateUpdateJobRequest(updJobReq)
 	if err != nil {
 		logger.Error("could not validate input data for update", err)
 		apiErr := api_error.NewBadRequestError("could not validate input data for update")

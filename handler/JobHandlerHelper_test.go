@@ -12,33 +12,57 @@ import (
 func Test_validateCreateUpdateJobRequest_NoType_Returns_BadRequestError(t *testing.T) {
 	req := dto.CreateUpdateJobRequest{}
 
-	err := validateCreateUpdateJobRequest(req)
+	err := validateCreateJobRequest(req)
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
 	assert.EqualValues(t, "job must have a type", err.Message())
 }
 
-func Test_validateCreateUpdateJobRequest_InvalidPriority_Returns_BadRequestError(t *testing.T) {
+func Test_validateCreateJobRequest_InvalidPriority_Returns_BadRequestError(t *testing.T) {
 	prio := "bogus"
 	req := dto.CreateUpdateJobRequest{
 		Type:     "encoding",
 		Priority: prio,
 	}
 
-	err := validateCreateUpdateJobRequest(req)
+	err := validateCreateJobRequest(req)
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
 	assert.EqualValues(t, fmt.Sprintf("priority value %v does not exist", prio), err.Message())
 }
 
-func Test_validateCreateUpdateJobRequest_ValidRequest_Returns_NoError(t *testing.T) {
+func Test_validateCreateJobRequest_ValidRequest_Returns_NoError(t *testing.T) {
 	req := dto.CreateUpdateJobRequest{
 		Type: "encoding",
 	}
 
-	err := validateCreateUpdateJobRequest(req)
+	err := validateCreateJobRequest(req)
+
+	assert.Nil(t, err)
+}
+
+func Test_validateUpdateJobRequest_InvalidPriority_Returns_BadRequestError(t *testing.T) {
+	prio := "bogus"
+	req := dto.CreateUpdateJobRequest{
+		Type:     "encoding",
+		Priority: prio,
+	}
+
+	err := validateUpdateJobRequest(req)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, fmt.Sprintf("priority value %v does not exist", prio), err.Message())
+}
+
+func Test_validateUpdateJobRequest_ValidRequest_Returns_NoError(t *testing.T) {
+	req := dto.CreateUpdateJobRequest{
+		Type: "encoding",
+	}
+
+	err := validateUpdateJobRequest(req)
 
 	assert.Nil(t, err)
 }

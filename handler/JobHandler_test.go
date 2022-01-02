@@ -369,3 +369,94 @@ func Test_Dequeue_Returns_NoError(t *testing.T) {
 	assert.EqualValues(t, http.StatusOK, recorder.Code)
 	assert.EqualValues(t, respJson, recorder.Body.String())
 }
+
+func Test_UpdateJob_Returns_InvalidIdError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	apiError := api_error.NewBadRequestError("User id should be a ksuid")
+	errorJson, _ := json.Marshal(apiError)
+	router.PUT("/jobs/:job_id", jh.UpdateJob)
+	request, _ := http.NewRequest(http.MethodPut, "/jobs/not_a_ksuid", nil)
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusBadRequest, recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
+func Test_UpdateJob_Returns_InvalidJsonError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	id := ksuid.New()
+	apiError := api_error.NewBadRequestError("invalid json body for job update")
+	errorJson, _ := json.Marshal(apiError)
+	router.PUT("/jobs/:job_id", jh.UpdateJob)
+	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v", id), nil)
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusBadRequest, recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
+func Test_UpdateJob_Returns_InvalidInputError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	id := ksuid.New()
+	apiError := api_error.NewBadRequestError("could not validate input data for update")
+	errorJson, _ := json.Marshal(apiError)
+	jobReq := dto.CreateUpdateJobRequest{
+		Name:     "Job 1",
+		Type:     "Encoding",
+		Priority: "bogus",
+	}
+	jobReqJson, _ := json.Marshal(jobReq)
+	router.PUT("/jobs/:job_id", jh.UpdateJob)
+	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v", id), strings.NewReader(string(jobReqJson)))
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusBadRequest, recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
+func Test_UpdateJob_Returns_ServiceError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	id := ksuid.New()
+	apiError := api_error.NewInternalServerError("database error", nil)
+	errorJson, _ := json.Marshal(apiError)
+	jobReq := dto.CreateUpdateJobRequest{
+		Priority: "high",
+	}
+	jobReqJson, _ := json.Marshal(jobReq)
+	mockService.EXPECT().UpdateJob(id.String(), jobReq).Return(nil, apiError)
+	router.PUT("/jobs/:job_id", jh.UpdateJob)
+	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v", id), strings.NewReader(string(jobReqJson)))
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusInternalServerError, recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
+func Test_UpdateJob_Returns_NoError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	id := ksuid.New()
+	jobReq := dto.CreateUpdateJobRequest{
+		Priority: "high",
+	}
+	jobReqJson, _ := json.Marshal(jobReq)
+	newJob, _ := domain.NewJob("Job 1", "Encoding")
+	newJobResp := newJob.ToJobResponseDto()
+	newJobRespJson, _ := json.Marshal(newJobResp)
+	mockService.EXPECT().UpdateJob(id.String(), jobReq).Return(&newJobResp, nil)
+	router.PUT("/jobs/:job_id", jh.UpdateJob)
+	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v", id), strings.NewReader(string(jobReqJson)))
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusOK, recorder.Code)
+	assert.EqualValues(t, newJobRespJson, recorder.Body.String())
+}
