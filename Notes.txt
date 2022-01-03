@@ -1,4 +1,4 @@
-Unit tests for repositories
+Unit tests for DB repository: https://pkg.go.dev/github.com/zhashkevych/go-sqlxmock
 Library to parse url params?
 Pagination
 Sort and filter
