@@ -65,6 +65,7 @@ func initRouter() {
 }
 
 func initDb() {
+	logger.Info(fmt.Sprintf("Connecting to database at %v:%v", cfg.Db.Host, cfg.Db.Port))
 	connUrl := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", cfg.Db.Host, cfg.Db.Port, cfg.Db.Username, cfg.Db.Password, cfg.Db.Name)
 	conn, err := sqlx.Connect("postgres", connUrl)
 	if err != nil {
@@ -72,6 +73,7 @@ func initDb() {
 		panic(err)
 	}
 	cfg.RunTime.DbConn = conn
+	logger.Info("Successfully connected to database")
 }
 
 func wireApp() {
