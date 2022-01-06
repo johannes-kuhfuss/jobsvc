@@ -621,8 +621,49 @@ func Test_SetHistoryById_Returns_NoError(t *testing.T) {
 	}
 	jobReqJson, _ := json.Marshal(jobReq)
 	mockService.EXPECT().SetHistoryById(id.String(), jobReq).Return(nil)
-	router.PUT("jobs/:job_id/history", jh.SetHistoryById)
+	router.PUT("/jobs/:job_id/history", jh.SetHistoryById)
 	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v/history", id), strings.NewReader(string(jobReqJson)))
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusNoContent, recorder.Code)
+}
+
+func Test_DeleteAllJobs_NoForce_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	apiError := api_error.NewBadRequestError("to delete all jobs you must use force=true")
+	errorJson, _ := json.Marshal(apiError)
+	router.DELETE("/jobs", jh.DeleteAllJobs)
+	request, _ := http.NewRequest(http.MethodDelete, "/jobs", nil)
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, apiError.StatusCode(), recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
+func Test_DeleteAllJobs_WithForce_Returns_ServiceError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	apiError := api_error.NewInternalServerError("Service error while deleting all jobs", nil)
+	errorJson, _ := json.Marshal(apiError)
+	mockService.EXPECT().DeleteAllJobs().Return(apiError)
+	router.DELETE("/jobs", jh.DeleteAllJobs)
+	request, _ := http.NewRequest(http.MethodDelete, "/jobs?force=true", nil)
+
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, apiError.StatusCode(), recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
+func Test_DeleteAllJobs_WithForce_Returns_NoError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	mockService.EXPECT().DeleteAllJobs().Return(nil)
+	router.DELETE("/jobs", jh.DeleteAllJobs)
+	request, _ := http.NewRequest(http.MethodDelete, "/jobs?force=true", nil)
 
 	router.ServeHTTP(recorder, request)
 

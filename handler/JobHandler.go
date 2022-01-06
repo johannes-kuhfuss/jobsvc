@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -212,7 +211,6 @@ func (jh JobHandlers) SetHistoryById(c *gin.Context) {
 
 func (jh JobHandlers) DeleteAllJobs(c *gin.Context) {
 	force := jh.Cfg.RunTime.BmPolicy.Sanitize(c.Query("force"))
-	logger.Info(fmt.Sprintf("Force: %v", force))
 	if force != "true" {
 		logger.Error("delete all jobs called without force=true", nil)
 		apiErr := api_error.NewBadRequestError("to delete all jobs you must use force=true")
