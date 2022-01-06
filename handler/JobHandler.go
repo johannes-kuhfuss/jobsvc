@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -61,6 +62,8 @@ func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
 		c.JSON(err.StatusCode(), err)
 		return
 	}
+	numItems := fmt.Sprintf("%v", len(*jobs))
+	c.Header("X-Total-Count", numItems)
 	c.JSON(http.StatusOK, jobs)
 }
 

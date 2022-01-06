@@ -1,7 +1,5 @@
 Add test data
-Add delete all (with force param)
 Library to parse url params?
 Pagination
 Sort and filter
 Let user choose return values
-Return value count as header
