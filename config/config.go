@@ -20,7 +20,8 @@ type AppConfig struct {
 	Gin struct {
 		Mode string `envconfig:"GIN_MODE" default:"release"`
 	}
-	Db struct {
+	BackEnd string `envconfig:"BACKEND" default:"db"`
+	Db      struct {
 		Username string `envconfig:"DB_USERNAME" required:"true"`
 		Password string `envconfig:"DB_PASSWORD" required:"true"`
 		Host     string `envconfig:"DB_HOST" required:"true"`

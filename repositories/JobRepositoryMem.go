@@ -98,7 +98,7 @@ func (jrm JobRepositoryMem) DeleteById(id string) api_error.ApiErr {
 	return nil
 }
 
-func (jrm JobRepositoryMem) GetNext() (*domain.Job, api_error.ApiErr) {
+func (jrm JobRepositoryMem) Dequeue(jobType string) (*domain.Job, api_error.ApiErr) {
 	var nextJobId string = ""
 	var nextJobDate time.Time = date.GetNowUtc().Add(1 * time.Second)
 
@@ -110,7 +110,7 @@ func (jrm JobRepositoryMem) GetNext() (*domain.Job, api_error.ApiErr) {
 		return nil, err
 	}
 	for _, job := range jrm.jobList {
-		if job.Status == domain.StatusCreated {
+		if (job.Type == jobType) && (job.Status == domain.StatusCreated) {
 			if job.CreatedAt.Before(nextJobDate) {
 				nextJobDate = job.CreatedAt
 				nextJobId = job.Id.String()
@@ -125,12 +125,33 @@ func (jrm JobRepositoryMem) GetNext() (*domain.Job, api_error.ApiErr) {
 	return job, nil
 }
 
-func (jrm JobRepositoryMem) SetStatus(id string, newStatus dto.UpdateJobStatusRequest) api_error.ApiErr {
+func (jrm JobRepositoryMem) SetStatusById(id string, newStatus string, message string) api_error.ApiErr {
 	job, err := jrm.FindById(id)
 	if err != nil {
 		return err
 	}
-	job.Status = domain.JobStatus(newStatus.Status)
+	job.Status = domain.JobStatus(newStatus)
+	job.AddHistory(message)
 	jrm.Store(*job)
 	return nil
+}
+
+func (jrm JobRepositoryMem) SetHistoryById(id string, message string) api_error.ApiErr {
+	job, err := jrm.FindById(id)
+	if err != nil {
+		return err
+	}
+	job.AddHistory(message)
+	jrm.Store(*job)
+	return nil
+}
+
+func (jrm JobRepositoryMem) Update(id string, jobUpdReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {
+	oldJob, err := jrm.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+	updJob := mergeJobs(oldJob, jobUpdReq)
+	jrm.Store(*updJob)
+	return updJob, nil
 }

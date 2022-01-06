@@ -1,1 +1,233 @@
 package repositories
+
+import (
+	"fmt"
+	"net/http"
+	"testing"
+
+	"github.com/johannes-kuhfuss/jobsvc/domain"
+	"github.com/segmentio/ksuid"
+	"github.com/stretchr/testify/assert"
+)
+
+var (
+	jobRepo JobRepositoryMem
+)
+
+func setupJob() func() {
+	jobRepo = NewJobRepositoryMem()
+	return func() {
+		jobRepo.jobList = nil
+	}
+}
+
+func Test_FindAll_NoJobs_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+
+	jList, err := jobRepo.FindAll("")
+
+	assert.Nil(t, jList)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_FindAll_NoJobsAfterFilter_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	fillJobList()
+
+	jList, err := jobRepo.FindAll("finished")
+
+	assert.Nil(t, jList)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs with status finished in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_FindAll_NoFilter_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	fillJobList()
+
+	jList, err := jobRepo.FindAll("")
+
+	assert.NotNil(t, jList)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 2, len(*jList))
+}
+
+func Test_FindAll_WithFilter_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	fillJobList()
+
+	jList, err := jobRepo.FindAll("running")
+
+	assert.NotNil(t, jList)
+	assert.Nil(t, err)
+	assert.NotEqual(t, jobRepo.jobList, jList)
+	assert.EqualValues(t, 1, len(*jList))
+}
+
+func Test_FindById_NoJobs_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+
+	job, err := jobRepo.FindById("")
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_FindById_NoJobsAfterFilter_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	fillJobList()
+	id := ksuid.New().String()
+
+	job, err := jobRepo.FindById(id)
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprintf("no job with id %v in joblist", id), err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_FindById_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	id := fillJobList()
+
+	job, err := jobRepo.FindById(id)
+
+	assert.NotNil(t, job)
+	assert.Nil(t, err)
+	assert.EqualValues(t, id, job.Id.String())
+}
+
+func fillJobList() (id string) {
+	job1, _ := domain.NewJob("job 1", "encoding")
+	job2, _ := domain.NewJob("job 2", "proxy")
+	job2.Status = domain.StatusRunning
+	id1 := job1.Id.String()
+	id2 := job2.Id.String()
+	jList := make(map[string]domain.Job)
+	jList[id1] = *job1
+	jList[id2] = *job2
+	jobRepo.mu.Lock()
+	defer jobRepo.mu.Unlock()
+	jobRepo.jobList = jList
+	return id1
+}
+
+func Test_Store_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	job, _ := domain.NewJob("job 1", "encoding")
+
+	err := jobRepo.Store(*job)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, 1, len(jobRepo.jobList))
+}
+
+func Test_DeleteById_NoJobs_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+
+	err := jobRepo.DeleteById("")
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_DeleteById_NoJobWithId_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	fillJobList()
+	id := ksuid.New().String()
+
+	err := jobRepo.DeleteById(id)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, fmt.Sprintf("no job with id %v in joblist", id), err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_DeleteById_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	id := fillJobList()
+
+	deletErr := jobRepo.DeleteById(id)
+	job, findErr := jobRepo.FindById(id)
+
+	assert.Nil(t, deletErr)
+	assert.NotNil(t, findErr)
+	assert.Nil(t, job)
+	assert.Equal(t, 1, len(jobRepo.jobList))
+}
+
+func Test_Dequeue_NoJobs_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+
+	job, err := jobRepo.Dequeue("encoding")
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_Dequeue_NoCreatedJobs_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	createdId := fillJobList()
+	jobRepo.SetStatusById(createdId, "running", "")
+
+	job, err := jobRepo.Dequeue("")
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs with status created in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_Dequeue_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	createdId := fillJobList()
+
+	job, err := jobRepo.Dequeue("encoding")
+
+	assert.NotNil(t, job)
+	assert.Nil(t, err)
+	assert.EqualValues(t, createdId, job.Id.String())
+}
+
+func Test_SetStatusById_NoJob_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	err := jobRepo.SetStatusById("", "", "")
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_SetStatusById_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	id := fillJobList()
+	err := jobRepo.SetStatusById(id, "failed", "")
+	job, _ := jobRepo.FindById(id)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, "failed", job.Status)
+}
