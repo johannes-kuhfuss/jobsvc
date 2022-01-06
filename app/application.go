@@ -31,7 +31,9 @@ func StartApp() {
 		panic(err)
 	}
 	initRouter()
-	initDb()
+	if cfg.BackEnd == "db" {
+		initDb()
+	}
 	wireApp()
 	mapUrls()
 	createSanitizer()
