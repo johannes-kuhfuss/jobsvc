@@ -82,6 +82,7 @@ func wireApp() {
 	if cfg.BackEnd == "db" {
 		jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	} else {
+		logger.Warn("using memory as job storage - jobs will not be persisted across service restarts")
 		jobRepo = repositories.NewJobRepositoryMem()
 	}
 	jobService = service.NewJobService(jobRepo)
