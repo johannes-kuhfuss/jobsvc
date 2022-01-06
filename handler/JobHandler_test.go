@@ -196,6 +196,9 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, recorder.Code)
 	assert.EqualValues(t, dummyJobListJson, recorder.Body.String())
+	count := recorder.Result().Header["X-Total-Count"]
+
+	assert.EqualValues(t, fmt.Sprintf("%v", len(dummyJobList)), count[0])
 }
 
 func createDummyJobList() []dto.JobResponse {
