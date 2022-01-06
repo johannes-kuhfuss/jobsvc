@@ -1,4 +1,5 @@
-Unit tests for DB repository: https://pkg.go.dev/github.com/zhashkevych/go-sqlxmock
+Add test data
+Add delete all (with force param)
 Library to parse url params?
 Pagination
 Sort and filter

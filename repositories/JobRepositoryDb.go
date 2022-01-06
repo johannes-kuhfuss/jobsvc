@@ -207,3 +207,14 @@ func (jrd JobRepositoryDb) SetHistoryById(id string, message string) api_error.A
 
 	return nil
 }
+
+func (jrd JobRepositoryDb) DeleteAllJobs() api_error.ApiErr {
+	conn := jrd.cfg.RunTime.DbConn
+	sqlDeleteAll := fmt.Sprintf("DELETE FROM %v", table)
+	_, sqlErr := conn.Exec(sqlDeleteAll)
+	if sqlErr != nil {
+		logger.Error("Database error deleting all jobs", sqlErr)
+		return api_error.NewInternalServerError("Database error deleting all jobs", nil)
+	}
+	return nil
+}

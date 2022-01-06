@@ -19,6 +19,7 @@ type JobService interface {
 	UpdateJob(string, dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
 	SetStatusById(string, dto.UpdateJobStatusRequest) api_error.ApiErr
 	SetHistoryById(string, dto.UpdateJobHistoryRequest) api_error.ApiErr
+	DeleteAllJobs() api_error.ApiErr
 }
 
 type DefaultJobService struct {
@@ -121,6 +122,14 @@ func (s DefaultJobService) SetHistoryById(id string, historyReq dto.UpdateJobHis
 		return api_error.NewNotFoundError(fmt.Sprintf("Job with id %v does not exist", id))
 	}
 	err = s.repo.SetHistoryById(id, historyReq.Message)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s DefaultJobService) DeleteAllJobs() api_error.ApiErr {
+	err := s.repo.DeleteAllJobs()
 	if err != nil {
 		return err
 	}

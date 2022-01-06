@@ -43,6 +43,7 @@ type JobRepository interface {
 	Dequeue(string) (*Job, api_error.ApiErr)
 	SetStatusById(string, string, string) api_error.ApiErr
 	SetHistoryById(string, string) api_error.ApiErr
+	DeleteAllJobs() api_error.ApiErr
 }
 
 func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {

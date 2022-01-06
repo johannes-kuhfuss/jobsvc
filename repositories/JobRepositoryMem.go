@@ -155,3 +155,12 @@ func (jrm JobRepositoryMem) Update(id string, jobUpdReq dto.CreateUpdateJobReque
 	jrm.Store(*updJob)
 	return updJob, nil
 }
+
+func (jrm JobRepositoryMem) DeleteAllJobs() api_error.ApiErr {
+	jrm.mu.Lock()
+	defer jrm.mu.Unlock()
+	for key := range jrm.jobList {
+		delete(jrm.jobList, key)
+	}
+	return nil
+}

@@ -50,6 +50,20 @@ func (mr *MockJobServiceMockRecorder) CreateJob(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJob", reflect.TypeOf((*MockJobService)(nil).CreateJob), arg0)
 }
 
+// DeleteAllJobs mocks base method.
+func (m *MockJobService) DeleteAllJobs() api_error.ApiErr {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllJobs")
+	ret0, _ := ret[0].(api_error.ApiErr)
+	return ret0
+}
+
+// DeleteAllJobs indicates an expected call of DeleteAllJobs.
+func (mr *MockJobServiceMockRecorder) DeleteAllJobs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllJobs", reflect.TypeOf((*MockJobService)(nil).DeleteAllJobs))
+}
+
 // DeleteJobById mocks base method.
 func (m *MockJobService) DeleteJobById(arg0 string) api_error.ApiErr {
 	m.ctrl.T.Helper()
