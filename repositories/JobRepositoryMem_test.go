@@ -287,3 +287,14 @@ func Test_Update_Returns_NoError(t *testing.T) {
 	assert.EqualValues(t, jobUpdReq.SubType, job.SubType)
 	assert.EqualValues(t, jobUpdReq.Rank, job.Rank)
 }
+
+func Test_DeleteAllJobs_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	fillJobList()
+
+	err := jobRepo.DeleteAllJobs()
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, 0, len(jobRepo.jobList))
+}

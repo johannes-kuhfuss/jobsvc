@@ -732,3 +732,28 @@ func Test_SetHistoryById_NoError_Returns_NoError(t *testing.T) {
 
 	assert.Nil(t, err)
 }
+
+func Test_DeleteAllJobs_DbError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	sqlError := sql.ErrConnDone
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v", table))).
+		WillReturnError(sqlError)
+
+	err := jrd.DeleteAllJobs()
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error deleting all jobs", err.Message())
+}
+
+func Test_DeleteAllJobs_NoError_Returns_NoError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v", table))).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := jrd.DeleteAllJobs()
+
+	assert.Nil(t, err)
+}
