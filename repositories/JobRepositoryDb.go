@@ -107,7 +107,7 @@ func (jrd JobRepositoryDb) Dequeue(jobType string) (*domain.Job, api_error.ApiEr
 	}
 	nextJob.AddHistory("Dequeuing job for processing")
 	now := date.GetNowUtc()
-	sqlUpdate := "UPDATE joblist SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4"
+	sqlUpdate := fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table)
 	_, sqlErr = tx.Exec(sqlUpdate, now, "running", nextJob.History, nextJob.Id.String())
 	if sqlErr != nil {
 		logger.Error("Database error updating job with id", sqlErr)
@@ -135,7 +135,7 @@ func (jrd JobRepositoryDb) SetStatusById(id string, newStatus string, message st
 		return api_error.NewInternalServerError("Database error updating job status with id", nil)
 	}
 	oldJob.AddHistory(message)
-	sqlUpdate := "UPDATE joblist SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4"
+	sqlUpdate := fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table)
 	now := date.GetNowUtc()
 	_, sqlErr = tx.Exec(sqlUpdate, now, newStatus, oldJob.History, id)
 	if sqlErr != nil {
