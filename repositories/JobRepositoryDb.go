@@ -96,7 +96,7 @@ func (jrd JobRepositoryDb) Dequeue(jobType string) (*domain.Job, api_error.ApiEr
 	if sqlErr != nil {
 		return nil, api_error.NewInternalServerError("Database transaction error dequeuing next job", nil)
 	}
-	sqlErr = tx.Get(&nextJob, fmt.Sprintf("SELECT * FROM %v WHERE status = $1 ORDER BY priority ASC, rank DESC limit 1", table), "created")
+	sqlErr = tx.Get(&nextJob, fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table), string(domain.StatusCreated), jobType)
 	if sqlErr != nil {
 		if sqlErr == sql.ErrNoRows {
 			logger.Info(fmt.Sprintf("No job found to dequeue for jobType %v", jobType))

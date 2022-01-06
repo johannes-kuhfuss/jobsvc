@@ -238,8 +238,8 @@ func Test_Dequeue_NoJobForType_Returns_NotFoundError(t *testing.T) {
 	jobType := "encoding"
 	sqlErr := sql.ErrNoRows
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 ORDER BY priority ASC, rank DESC limit 1", table))).
-		WithArgs("created").WillReturnError(sqlErr)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+		WithArgs(string(domain.StatusCreated), jobType).WillReturnError(sqlErr)
 
 	job, err := jrd.Dequeue(jobType)
 
@@ -256,8 +256,8 @@ func Test_Dequeue_DbSelectError_Returns_InternalServerError(t *testing.T) {
 	jobType := "encoding"
 	sqlErr := sql.ErrConnDone
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 ORDER BY priority ASC, rank DESC limit 1", table))).
-		WithArgs("created").WillReturnError(sqlErr)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+		WithArgs(string(domain.StatusCreated), jobType).WillReturnError(sqlErr)
 
 	job, err := jrd.Dequeue(jobType)
 
@@ -278,8 +278,8 @@ func Test_Dequeue_DbUpdateError_Returns_InternalServerError(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
 		AddRow(id, "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 ORDER BY priority ASC, rank DESC limit 1", table))).
-		WithArgs("created").WillReturnRows(rows)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
 	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
 		WithArgs(AnyTime{}, "running", AnyString{}, id).WillReturnError(sqlErr)
 
@@ -302,8 +302,8 @@ func Test_Dequeue_TransactionCommitError_Returns_InternalServerError(t *testing.
 	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
 		AddRow(id, "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 ORDER BY priority ASC, rank DESC limit 1", table))).
-		WithArgs("created").WillReturnRows(rows)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
 	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
 		WithArgs(AnyTime{}, "running", AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit().WillReturnError(sqlErr)
@@ -326,8 +326,8 @@ func Test_Dequeue_NoError_Returns_Job(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
 		AddRow(id, "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 ORDER BY priority ASC, rank DESC limit 1", table))).
-		WithArgs("created").WillReturnRows(rows)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
 	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
 		WithArgs(AnyTime{}, "running", AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
