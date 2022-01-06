@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/domain"
+	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/services_utils/date"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/segmentio/ksuid"
@@ -441,6 +442,400 @@ func Test_SetStatusById_NoError_Returns_NoError(t *testing.T) {
 	mock.ExpectCommit()
 
 	err := jrd.SetStatusById(id, newStatus, message)
+
+	assert.Nil(t, err)
+}
+
+func Test_Update_TransactionBeginError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrConnDone
+	id := ksuid.New().String()
+	jobUpdReq := dto.CreateUpdateJobRequest{
+		SubType: "sub type",
+	}
+	mock.ExpectBegin().WillReturnError(sqlErr)
+
+	job, err := jrd.Update(id, jobUpdReq)
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database transaction error updating job with id", err.Message())
+}
+
+func Test_Update_DbSelectError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrConnDone
+	id := ksuid.New().String()
+	jobUpdReq := dto.CreateUpdateJobRequest{
+		SubType: "sub type",
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+		WithArgs(id).WillReturnError(sqlErr)
+
+	job, err := jrd.Update(id, jobUpdReq)
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error updating job with id", err.Message())
+}
+
+func Test_Update_DbUpdateError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrConnDone
+	oldJob := domain.Job{
+		Id:            ksuid.New(),
+		CorrelationId: "Corr Id 1",
+		Name:          "Job 1",
+		CreatedAt:     time.Now().UTC(),
+		CreatedBy:     "me",
+		ModifiedAt:    time.Now().UTC(),
+		ModifiedBy:    "you",
+		Status:        "running",
+		Source:        "source 1",
+		Destination:   "destination 1",
+		Type:          "encoding",
+		SubType:       "subtype 1",
+		Action:        "action 1",
+		ActionDetails: "action details 1",
+		Progress:      0,
+		History:       "2022-01-05T06:07:55Z: Job created\n",
+		ExtraData:     "no extra data 1",
+		Priority:      2,
+		Rank:          0,
+	}
+
+	jobUpdReq := dto.CreateUpdateJobRequest{
+		SubType: "subtype 2",
+	}
+	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
+		AddRow(oldJob.Id.String(), oldJob.CorrelationId, oldJob.Name, oldJob.CreatedAt, oldJob.CreatedBy, oldJob.ModifiedAt, oldJob.ModifiedBy, oldJob.Status, oldJob.Source, oldJob.Destination, oldJob.Type, oldJob.SubType, oldJob.Action, oldJob.ActionDetails, oldJob.Progress, oldJob.History, oldJob.ExtraData, oldJob.Priority, oldJob.Rank)
+	mergedJob := mergeJobs(&oldJob, jobUpdReq)
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+		WithArgs(oldJob.Id.String()).WillReturnRows(rows)
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15", table))).
+		WithArgs(mergedJob.CorrelationId, mergedJob.Name, AnyTime{}, mergedJob.ModifiedBy, mergedJob.Source, mergedJob.Destination, mergedJob.Type, mergedJob.SubType, mergedJob.Action, mergedJob.ActionDetails, mergedJob.History, mergedJob.ExtraData, mergedJob.Priority, mergedJob.Rank, oldJob.Id.String()).
+		WillReturnError(sqlErr)
+
+	job, err := jrd.Update(oldJob.Id.String(), jobUpdReq)
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error updating job with id", err.Message())
+}
+
+func Test_Update_TransactionCommitError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrTxDone
+	oldJob := domain.Job{
+		Id:            ksuid.New(),
+		CorrelationId: "Corr Id 1",
+		Name:          "Job 1",
+		CreatedAt:     time.Now().UTC(),
+		CreatedBy:     "me",
+		ModifiedAt:    time.Now().UTC(),
+		ModifiedBy:    "you",
+		Status:        "running",
+		Source:        "source 1",
+		Destination:   "destination 1",
+		Type:          "encoding",
+		SubType:       "subtype 1",
+		Action:        "action 1",
+		ActionDetails: "action details 1",
+		Progress:      0,
+		History:       "2022-01-05T06:07:55Z: Job created\n",
+		ExtraData:     "no extra data 1",
+		Priority:      2,
+		Rank:          0,
+	}
+
+	jobUpdReq := dto.CreateUpdateJobRequest{
+		SubType: "subtype 2",
+	}
+	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
+		AddRow(oldJob.Id.String(), oldJob.CorrelationId, oldJob.Name, oldJob.CreatedAt, oldJob.CreatedBy, oldJob.ModifiedAt, oldJob.ModifiedBy, oldJob.Status, oldJob.Source, oldJob.Destination, oldJob.Type, oldJob.SubType, oldJob.Action, oldJob.ActionDetails, oldJob.Progress, oldJob.History, oldJob.ExtraData, oldJob.Priority, oldJob.Rank)
+	mergedJob := mergeJobs(&oldJob, jobUpdReq)
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+		WithArgs(oldJob.Id.String()).WillReturnRows(rows)
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15", table))).
+		WithArgs(mergedJob.CorrelationId, mergedJob.Name, AnyTime{}, mergedJob.ModifiedBy, mergedJob.Source, mergedJob.Destination, mergedJob.Type, mergedJob.SubType, mergedJob.Action, mergedJob.ActionDetails, mergedJob.History, mergedJob.ExtraData, mergedJob.Priority, mergedJob.Rank, oldJob.Id.String()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit().WillReturnError(sqlErr)
+
+	job, err := jrd.Update(oldJob.Id.String(), jobUpdReq)
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database transaction error updating job with id", err.Message())
+}
+
+func Test_Update_NoError_Returns_Job(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	oldJob := domain.Job{
+		Id:            ksuid.New(),
+		CorrelationId: "Corr Id 1",
+		Name:          "Job 1",
+		CreatedAt:     time.Now().UTC(),
+		CreatedBy:     "me",
+		ModifiedAt:    time.Now().UTC(),
+		ModifiedBy:    "you",
+		Status:        "running",
+		Source:        "source 1",
+		Destination:   "destination 1",
+		Type:          "encoding",
+		SubType:       "subtype 1",
+		Action:        "action 1",
+		ActionDetails: "action details 1",
+		Progress:      0,
+		History:       "2022-01-05T06:07:55Z: Job created\n",
+		ExtraData:     "no extra data 1",
+		Priority:      2,
+		Rank:          0,
+	}
+
+	jobUpdReq := dto.CreateUpdateJobRequest{
+		SubType: "subtype 2",
+	}
+	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
+		AddRow(oldJob.Id.String(), oldJob.CorrelationId, oldJob.Name, oldJob.CreatedAt, oldJob.CreatedBy, oldJob.ModifiedAt, oldJob.ModifiedBy, oldJob.Status, oldJob.Source, oldJob.Destination, oldJob.Type, oldJob.SubType, oldJob.Action, oldJob.ActionDetails, oldJob.Progress, oldJob.History, oldJob.ExtraData, oldJob.Priority, oldJob.Rank)
+	mergedJob := mergeJobs(&oldJob, jobUpdReq)
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+		WithArgs(oldJob.Id.String()).WillReturnRows(rows)
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15", table))).
+		WithArgs(mergedJob.CorrelationId, mergedJob.Name, AnyTime{}, mergedJob.ModifiedBy, mergedJob.Source, mergedJob.Destination, mergedJob.Type, mergedJob.SubType, mergedJob.Action, mergedJob.ActionDetails, mergedJob.History, mergedJob.ExtraData, mergedJob.Priority, mergedJob.Rank, oldJob.Id.String()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	job, err := jrd.Update(oldJob.Id.String(), jobUpdReq)
+
+	assert.NotNil(t, job)
+	assert.Nil(t, err)
+	assert.EqualValues(t, oldJob.Id, job.Id)
+	assert.EqualValues(t, jobUpdReq.SubType, job.SubType)
+}
+
+func Test_mergeJobs_NoUpdates_ReturnsJob(t *testing.T) {
+	oldJob := domain.Job{
+		Id:            ksuid.New(),
+		CorrelationId: "Corr Id 1",
+		Name:          "Job 1",
+		CreatedAt:     time.Now().UTC(),
+		CreatedBy:     "me",
+		ModifiedAt:    time.Now().UTC(),
+		ModifiedBy:    "you",
+		Status:        "running",
+		Source:        "source 1",
+		Destination:   "destination 1",
+		Type:          "encoding",
+		SubType:       "subtype 1",
+		Action:        "action 1",
+		ActionDetails: "action details 1",
+		Progress:      0,
+		History:       "2022-01-05T06:07:55Z: Job created\n",
+		ExtraData:     "no extra data 1",
+		Priority:      2,
+		Rank:          0,
+	}
+	jobUpdReq := dto.CreateUpdateJobRequest{}
+
+	newJob := mergeJobs(&oldJob, jobUpdReq)
+
+	assert.NotNil(t, newJob)
+	assert.EqualValues(t, oldJob.Id, newJob.Id)
+	assert.EqualValues(t, oldJob.CorrelationId, newJob.CorrelationId)
+	assert.EqualValues(t, oldJob.Name, newJob.Name)
+	assert.EqualValues(t, oldJob.CreatedAt, newJob.CreatedAt)
+	assert.EqualValues(t, oldJob.CreatedBy, newJob.CreatedBy)
+	assert.EqualValues(t, oldJob.Status, newJob.Status)
+	assert.EqualValues(t, oldJob.Source, newJob.Source)
+	assert.EqualValues(t, oldJob.Destination, newJob.Destination)
+	assert.EqualValues(t, oldJob.Type, newJob.Type)
+	assert.EqualValues(t, oldJob.SubType, newJob.SubType)
+	assert.EqualValues(t, oldJob.Action, newJob.Action)
+	assert.EqualValues(t, oldJob.ActionDetails, newJob.ActionDetails)
+	assert.EqualValues(t, oldJob.Progress, newJob.Progress)
+	assert.EqualValues(t, oldJob.History, newJob.History)
+	assert.EqualValues(t, oldJob.ExtraData, newJob.ExtraData)
+	assert.EqualValues(t, oldJob.Priority, newJob.Priority)
+	assert.EqualValues(t, oldJob.Rank, newJob.Rank)
+}
+
+func Test_mergeJobs_AllUpdates_ReturnsJob(t *testing.T) {
+	oldJob := domain.Job{
+		Id:            ksuid.New(),
+		CorrelationId: "Corr Id 1",
+		Name:          "Job 1",
+		CreatedAt:     time.Now().UTC(),
+		CreatedBy:     "me",
+		ModifiedAt:    time.Now().UTC(),
+		ModifiedBy:    "you",
+		Status:        "running",
+		Source:        "source 1",
+		Destination:   "destination 1",
+		Type:          "encoding",
+		SubType:       "subtype 1",
+		Action:        "action 1",
+		ActionDetails: "action details 1",
+		Progress:      0,
+		History:       "2022-01-05T06:07:55Z: Job created\n",
+		ExtraData:     "no extra data 1",
+		Priority:      2,
+		Rank:          0,
+	}
+	jobUpdReq := dto.CreateUpdateJobRequest{
+		CorrelationId: "new corr id",
+		Name:          "new job name",
+		Source:        "new source",
+		Destination:   "new destination",
+		Type:          "new type",
+		SubType:       "new sub type",
+		Action:        "new action",
+		ActionDetails: "new action details",
+		ExtraData:     "new extra data",
+		Priority:      "high",
+		Rank:          15,
+	}
+
+	newJob := mergeJobs(&oldJob, jobUpdReq)
+
+	assert.NotNil(t, newJob)
+	assert.EqualValues(t, oldJob.Id, newJob.Id)
+	assert.EqualValues(t, jobUpdReq.CorrelationId, newJob.CorrelationId)
+	assert.EqualValues(t, jobUpdReq.Name, newJob.Name)
+	assert.EqualValues(t, oldJob.CreatedAt, newJob.CreatedAt)
+	assert.EqualValues(t, oldJob.CreatedBy, newJob.CreatedBy)
+	assert.EqualValues(t, oldJob.Status, newJob.Status)
+	assert.EqualValues(t, jobUpdReq.Source, newJob.Source)
+	assert.EqualValues(t, jobUpdReq.Destination, newJob.Destination)
+	assert.EqualValues(t, jobUpdReq.Type, newJob.Type)
+	assert.EqualValues(t, jobUpdReq.SubType, newJob.SubType)
+	assert.EqualValues(t, jobUpdReq.Action, newJob.Action)
+	assert.EqualValues(t, jobUpdReq.ActionDetails, newJob.ActionDetails)
+	assert.EqualValues(t, oldJob.Progress, newJob.Progress)
+	assert.EqualValues(t, jobUpdReq.ExtraData, newJob.ExtraData)
+	prio, _ := domain.JobPriority.AsIndex(jobUpdReq.Priority)
+	assert.EqualValues(t, prio, newJob.Priority)
+	assert.EqualValues(t, jobUpdReq.Rank, newJob.Rank)
+	assert.Contains(t, newJob.History, "Job data changed. New Data:")
+}
+
+//
+
+func Test_SetHistoryById_TransactionBeginError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrConnDone
+	id := ksuid.New().String()
+	message := "Job History Updated"
+	mock.ExpectBegin().WillReturnError(sqlErr)
+
+	err := jrd.SetHistoryById(id, message)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database transaction error updating job history with id", err.Message())
+}
+
+func Test_SetHistoryById_DbSelectError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrConnDone
+	id := ksuid.New().String()
+	message := "Job History Updated"
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+		WithArgs(id).WillReturnError(sqlErr)
+
+	err := jrd.SetHistoryById(id, message)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error updating job history with id", err.Message())
+}
+
+func Test_SetHistoryById_DbUpdateError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrConnDone
+	id := ksuid.New().String()
+	message := "Job History Updated"
+	rows := sqlmock.NewRows([]string{"history"}).
+		AddRow("2022-01-05T06:07:55Z: Job created\n")
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+		WithArgs(id).WillReturnRows(rows)
+
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3", table))).
+		WithArgs(AnyTime{}, AnyString{}, id).WillReturnError(sqlErr)
+
+	err := jrd.SetHistoryById(id, message)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error updating job history with id", err.Message())
+}
+
+func Test_SetHistoryById_TransactionCommitError_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	sqlErr := sql.ErrTxDone
+	id := ksuid.New().String()
+	message := "Job History Updated"
+	rows := sqlmock.NewRows([]string{"history"}).
+		AddRow("2022-01-05T06:07:55Z: Job created\n")
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+		WithArgs(id).WillReturnRows(rows)
+
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3", table))).
+		WithArgs(AnyTime{}, AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit().WillReturnError(sqlErr)
+
+	err := jrd.SetHistoryById(id, message)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database transaction error updating job history with id", err.Message())
+}
+
+func Test_SetHistoryById_NoError_Returns_NoError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	id := ksuid.New().String()
+	message := "Job History Updated"
+	rows := sqlmock.NewRows([]string{"history"}).
+		AddRow("2022-01-05T06:07:55Z: Job created\n")
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+		WithArgs(id).WillReturnRows(rows)
+
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3", table))).
+		WithArgs(AnyTime{}, AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	err := jrd.SetHistoryById(id, message)
 
 	assert.Nil(t, err)
 }

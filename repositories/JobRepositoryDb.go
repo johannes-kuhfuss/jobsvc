@@ -164,11 +164,8 @@ func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) 
 	if sqlErr != nil {
 		return nil, api_error.NewInternalServerError("Database error updating job with id", nil)
 	}
-	updJob, err := mergeJobs(&oldJob, jobReq)
-	if err != nil {
-		return nil, err
-	}
-	sqlUpdate := "UPDATE joblist SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15"
+	updJob := mergeJobs(&oldJob, jobReq)
+	sqlUpdate := fmt.Sprintf("UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15", table)
 	_, sqlErr = tx.Exec(sqlUpdate, updJob.CorrelationId, updJob.Name, updJob.ModifiedAt, updJob.ModifiedBy, updJob.Source, updJob.Destination, updJob.Type, updJob.SubType, updJob.Action, updJob.ActionDetails, updJob.History, updJob.ExtraData, updJob.Priority, updJob.Rank, updJob.Id.String())
 	if sqlErr != nil {
 		logger.Error("Database error updating job with id", sqlErr)
@@ -181,7 +178,7 @@ func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) 
 	return updJob, nil
 }
 
-func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domain.Job, api_error.ApiErr) {
+func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) *domain.Job {
 	changed := make(map[string]string)
 	mergedJob := domain.Job{}
 	mergedJob.Id = oldJob.Id
@@ -238,6 +235,7 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 	} else {
 		mergedJob.ActionDetails = oldJob.ActionDetails
 	}
+	mergedJob.Progress = oldJob.Progress
 	if updJobReq.ExtraData != "" {
 		mergedJob.ExtraData = updJobReq.ExtraData
 		changed["ExtraData"] = updJobReq.ExtraData
@@ -258,14 +256,15 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) (*domai
 		mergedJob.Rank = oldJob.Rank
 	}
 
-	var changedStr string
-	for k, v := range changed {
-		changedStr = fmt.Sprintf("%v%v: %v; ", changedStr, k, v)
+	if len(changed) > 0 {
+		var changedStr string
+		for k, v := range changed {
+			changedStr = fmt.Sprintf("%v%v: %v; ", changedStr, k, v)
+		}
+		oldJob.AddHistory(fmt.Sprintf("Job data changed. New Data: %v", changedStr))
 	}
-	oldJob.AddHistory(fmt.Sprintf("Job data changed. New Data: %v", changedStr))
 	mergedJob.History = oldJob.History
-
-	return &mergedJob, nil
+	return &mergedJob
 }
 
 func (jrd JobRepositoryDb) SetHistoryById(id string, message string) api_error.ApiErr {
@@ -283,7 +282,7 @@ func (jrd JobRepositoryDb) SetHistoryById(id string, message string) api_error.A
 		return api_error.NewInternalServerError("Database error updating job history with id", nil)
 	}
 	oldJob.AddHistory(message)
-	sqlUpdate := "UPDATE joblist SET (modified_at, history) = ($1, $2) WHERE id = $3"
+	sqlUpdate := fmt.Sprintf("UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3", table)
 	now := date.GetNowUtc()
 	_, sqlErr = tx.Exec(sqlUpdate, now, oldJob.History, id)
 	if sqlErr != nil {
