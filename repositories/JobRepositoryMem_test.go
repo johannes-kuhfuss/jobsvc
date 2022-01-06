@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/johannes-kuhfuss/jobsvc/domain"
+	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/segmentio/ksuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -214,6 +215,7 @@ func Test_Dequeue_Returns_NoError(t *testing.T) {
 func Test_SetStatusById_NoJob_Returns_NotFoundError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
+
 	err := jobRepo.SetStatusById("", "", "")
 
 	assert.NotNil(t, err)
@@ -225,9 +227,63 @@ func Test_SetStatusById_Returns_NoError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	id := fillJobList()
-	err := jobRepo.SetStatusById(id, "failed", "")
-	job, _ := jobRepo.FindById(id)
 
+	err := jobRepo.SetStatusById(id, "failed", "")
+
+	job, _ := jobRepo.FindById(id)
 	assert.Nil(t, err)
 	assert.EqualValues(t, "failed", job.Status)
+}
+
+func Test_SetHistoryById_NoJob_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+
+	err := jobRepo.SetHistoryById("", "")
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_SetHistoryById_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	id := fillJobList()
+
+	err := jobRepo.SetHistoryById(id, "new entry")
+
+	job, _ := jobRepo.FindById(id)
+	assert.Nil(t, err)
+	assert.Contains(t, job.History, "new entry")
+}
+
+func Test_Update_NoJob_Returns_NotFoundError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	jobUpdReq := dto.CreateUpdateJobRequest{}
+
+	job, err := jobRepo.Update("", jobUpdReq)
+
+	assert.Nil(t, job)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
+}
+
+func Test_Update_Returns_NoError(t *testing.T) {
+	teardown := setupJob()
+	defer teardown()
+	id := fillJobList()
+	jobUpdReq := dto.CreateUpdateJobRequest{
+		SubType: "new sub type",
+		Rank:    15,
+	}
+
+	job, err := jobRepo.Update(id, jobUpdReq)
+
+	assert.NotNil(t, job)
+	assert.Nil(t, err)
+	assert.EqualValues(t, jobUpdReq.SubType, job.SubType)
+	assert.EqualValues(t, jobUpdReq.Rank, job.Rank)
 }
