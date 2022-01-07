@@ -70,7 +70,7 @@ func Test_FindAll_NoStatus_Returns_DbError(t *testing.T) {
 	assert.Nil(t, jobs)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error finding all jobs", err.Message())
+	assert.EqualValues(t, "Database error getting all jobs", err.Message())
 }
 
 func Test_FindAll_NoStatusNoResults_Returns_NotFoundError(t *testing.T) {
@@ -118,7 +118,7 @@ func Test_FindById_DbError_Returns_InternalServerError(t *testing.T) {
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error finding job by id", err.Message())
+	assert.EqualValues(t, "Database error getting job by id", err.Message())
 }
 
 func Test_FindById_NoResult_Returns_NotFoundError(t *testing.T) {
@@ -228,7 +228,7 @@ func Test_Dequeue_TransactionBeginError_Returns_InternalServerError(t *testing.T
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error dequeuing next job", err.Message())
+	assert.EqualValues(t, "Database transaction start error dequeuing job", err.Message())
 }
 
 func Test_Dequeue_NoJobForType_Returns_NotFoundError(t *testing.T) {
@@ -246,7 +246,7 @@ func Test_Dequeue_NoJobForType_Returns_NotFoundError(t *testing.T) {
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
-	assert.EqualValues(t, fmt.Sprintf("No job found to dequeue for jobType %v", jobType), err.Message())
+	assert.EqualValues(t, fmt.Sprintf("No job found to dequeue for type %v", jobType), err.Message())
 }
 
 func Test_Dequeue_DbSelectError_Returns_InternalServerError(t *testing.T) {
@@ -264,7 +264,7 @@ func Test_Dequeue_DbSelectError_Returns_InternalServerError(t *testing.T) {
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error dequeuing next job", err.Message())
+	assert.EqualValues(t, "Database error dequeuing next job (select)", err.Message())
 }
 
 func Test_Dequeue_DbUpdateError_Returns_InternalServerError(t *testing.T) {
@@ -288,7 +288,7 @@ func Test_Dequeue_DbUpdateError_Returns_InternalServerError(t *testing.T) {
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error dequeuing next job", err.Message())
+	assert.EqualValues(t, "Database error dequeuing next job (update)", err.Message())
 }
 
 func Test_Dequeue_TransactionCommitError_Returns_InternalServerError(t *testing.T) {
@@ -313,7 +313,7 @@ func Test_Dequeue_TransactionCommitError_Returns_InternalServerError(t *testing.
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error dequeuing next job", err.Message())
+	assert.EqualValues(t, "Database transaction end error dequeuing job", err.Message())
 }
 
 func Test_Dequeue_NoError_Returns_Job(t *testing.T) {
@@ -353,7 +353,7 @@ func Test_SetStatusById_TransactionBeginError_Returns_InternalServerError(t *tes
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error updating job status with id", err.Message())
+	assert.EqualValues(t, "Database transaction start error setting job status by id", err.Message())
 }
 
 func Test_SetStatusById_DbSelectError_Returns_InternalServerError(t *testing.T) {
@@ -372,7 +372,7 @@ func Test_SetStatusById_DbSelectError_Returns_InternalServerError(t *testing.T) 
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error updating job status with id", err.Message())
+	assert.EqualValues(t, "Database error setting job status with id (select)", err.Message())
 }
 
 func Test_SetStatusById_DbUpdateError_Returns_InternalServerError(t *testing.T) {
@@ -396,7 +396,7 @@ func Test_SetStatusById_DbUpdateError_Returns_InternalServerError(t *testing.T) 
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error updating job status with id", err.Message())
+	assert.EqualValues(t, "Database error setting job status with id (update)", err.Message())
 }
 
 func Test_SetStatusById_TransactionCommitError_Returns_InternalServerError(t *testing.T) {
@@ -421,7 +421,7 @@ func Test_SetStatusById_TransactionCommitError_Returns_InternalServerError(t *te
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error updating job status with id", err.Message())
+	assert.EqualValues(t, "Database transaction end error setting job status by id", err.Message())
 }
 
 func Test_SetStatusById_NoError_Returns_NoError(t *testing.T) {
@@ -462,7 +462,7 @@ func Test_Update_TransactionBeginError_Returns_InternalServerError(t *testing.T)
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error updating job with id", err.Message())
+	assert.EqualValues(t, "Database transaction start error updating job", err.Message())
 }
 
 func Test_Update_DbSelectError_Returns_InternalServerError(t *testing.T) {
@@ -483,7 +483,7 @@ func Test_Update_DbSelectError_Returns_InternalServerError(t *testing.T) {
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error updating job with id", err.Message())
+	assert.EqualValues(t, "Database error updating job (select)", err.Message())
 }
 
 func Test_Update_DbUpdateError_Returns_InternalServerError(t *testing.T) {
@@ -531,7 +531,7 @@ func Test_Update_DbUpdateError_Returns_InternalServerError(t *testing.T) {
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error updating job with id", err.Message())
+	assert.EqualValues(t, "Database error updating job (update)", err.Message())
 }
 
 func Test_Update_TransactionCommitError_Returns_InternalServerError(t *testing.T) {
@@ -580,7 +580,7 @@ func Test_Update_TransactionCommitError_Returns_InternalServerError(t *testing.T
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error updating job with id", err.Message())
+	assert.EqualValues(t, "Database transaction end error updating job", err.Message())
 }
 
 func Test_Update_NoError_Returns_Job(t *testing.T) {
@@ -644,7 +644,7 @@ func Test_SetHistoryById_TransactionBeginError_Returns_InternalServerError(t *te
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error updating job history with id", err.Message())
+	assert.EqualValues(t, "Database transaction start error setting job history by id", err.Message())
 }
 
 func Test_SetHistoryById_DbSelectError_Returns_InternalServerError(t *testing.T) {
@@ -662,7 +662,7 @@ func Test_SetHistoryById_DbSelectError_Returns_InternalServerError(t *testing.T)
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error updating job history with id", err.Message())
+	assert.EqualValues(t, "Database error setting job history by id (select)", err.Message())
 }
 
 func Test_SetHistoryById_DbUpdateError_Returns_InternalServerError(t *testing.T) {
@@ -685,7 +685,7 @@ func Test_SetHistoryById_DbUpdateError_Returns_InternalServerError(t *testing.T)
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database error updating job history with id", err.Message())
+	assert.EqualValues(t, "Database error setting job history by id (update)", err.Message())
 }
 
 func Test_SetHistoryById_TransactionCommitError_Returns_InternalServerError(t *testing.T) {
@@ -709,7 +709,7 @@ func Test_SetHistoryById_TransactionCommitError_Returns_InternalServerError(t *t
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
-	assert.EqualValues(t, "Database transaction error updating job history with id", err.Message())
+	assert.EqualValues(t, "Database transaction end error setting job history by id", err.Message())
 }
 
 func Test_SetHistoryById_NoError_Returns_NoError(t *testing.T) {
