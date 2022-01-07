@@ -43,7 +43,9 @@ func (jrd JobRepositoryDb) FindAll(status string) (*[]domain.Job, api_error.ApiE
 		return nil, api_error.NewInternalServerError(msg, nil)
 	}
 	if len(jobs) == 0 {
-		return nil, api_error.NewNotFoundError("No jobs found")
+		msg := "No jobs found"
+		logger.Info(msg)
+		return nil, api_error.NewNotFoundError(msg)
 	}
 	return &jobs, nil
 }

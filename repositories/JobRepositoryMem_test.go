@@ -30,7 +30,7 @@ func Test_FindAll_NoJobs_Returns_NotFoundError(t *testing.T) {
 
 	assert.Nil(t, jList)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, "No jobs in job list", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -38,12 +38,13 @@ func Test_FindAll_NoJobsAfterFilter_Returns_NotFoundError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	fillJobList()
+	status := "finished"
 
-	jList, err := jobRepo.FindAll("finished")
+	jList, err := jobRepo.FindAll(status)
 
 	assert.Nil(t, jList)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs with status finished in joblist", err.Message())
+	assert.EqualValues(t, fmt.Sprintf("No jobs with status %v in joblist", status), err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -63,8 +64,9 @@ func Test_FindAll_WithFilter_Returns_NoError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	fillJobList()
+	status := "running"
 
-	jList, err := jobRepo.FindAll("running")
+	jList, err := jobRepo.FindAll(status)
 
 	assert.NotNil(t, jList)
 	assert.Nil(t, err)
@@ -80,7 +82,7 @@ func Test_FindById_NoJobs_Returns_NotFoundError(t *testing.T) {
 
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, "No jobs in joblist", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -94,7 +96,7 @@ func Test_FindById_NoJobsAfterFilter_Returns_NotFoundError(t *testing.T) {
 
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprintf("no job with id %v in joblist", id), err.Message())
+	assert.EqualValues(t, fmt.Sprintf("No job with id %v in joblist", id), err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -143,7 +145,7 @@ func Test_DeleteById_NoJobs_Returns_NotFoundError(t *testing.T) {
 	err := jobRepo.DeleteById("")
 
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, "No jobs in joblist", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -156,7 +158,7 @@ func Test_DeleteById_NoJobWithId_Returns_NotFoundError(t *testing.T) {
 	err := jobRepo.DeleteById(id)
 
 	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprintf("no job with id %v in joblist", id), err.Message())
+	assert.EqualValues(t, fmt.Sprintf("No job with id %v in joblist", id), err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -182,7 +184,7 @@ func Test_Dequeue_NoJobs_Returns_NotFoundError(t *testing.T) {
 
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, "No jobs in joblist", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -196,7 +198,7 @@ func Test_Dequeue_NoCreatedJobs_Returns_NotFoundError(t *testing.T) {
 
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs with status created in joblist", err.Message())
+	assert.EqualValues(t, "No more jobs to dequeue", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -219,7 +221,7 @@ func Test_SetStatusById_NoJob_Returns_NotFoundError(t *testing.T) {
 	err := jobRepo.SetStatusById("", "", "")
 
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, "No jobs in joblist", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -242,7 +244,7 @@ func Test_SetHistoryById_NoJob_Returns_NotFoundError(t *testing.T) {
 	err := jobRepo.SetHistoryById("", "")
 
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, "No jobs in joblist", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
@@ -267,7 +269,7 @@ func Test_Update_NoJob_Returns_NotFoundError(t *testing.T) {
 
 	assert.Nil(t, job)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "no jobs in joblist", err.Message())
+	assert.EqualValues(t, "No jobs in joblist", err.Message())
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 

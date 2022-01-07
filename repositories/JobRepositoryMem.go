@@ -10,6 +10,7 @@ import (
 	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/date"
+	"github.com/johannes-kuhfuss/services_utils/logger"
 )
 
 type JobRepositoryMem struct {
@@ -27,7 +28,9 @@ func (jrm JobRepositoryMem) FindAll(status string) (*[]domain.Job, api_error.Api
 	jrm.mu.Lock()
 	defer jrm.mu.Unlock()
 	if len(jrm.jobList) == 0 {
-		return nil, api_error.NewNotFoundError("no jobs in joblist")
+		msg := "No jobs in job list"
+		logger.Info(msg)
+		return nil, api_error.NewNotFoundError(msg)
 	}
 	if strings.TrimSpace(status) == "" {
 		return convertMapToSlice(jrm.jobList), nil
@@ -52,7 +55,9 @@ func filterByStatus(jList map[string]domain.Job, status string) (*[]domain.Job, 
 		}
 	}
 	if len(filteredByStatusList) == 0 {
-		return nil, api_error.NewNotFoundError(fmt.Sprintf("no jobs with status %v in joblist", status))
+		msg := fmt.Sprintf("No jobs with status %v in joblist", status)
+		logger.Info(msg)
+		return nil, api_error.NewNotFoundError(msg)
 	} else {
 		return &filteredByStatusList, nil
 	}
@@ -62,7 +67,9 @@ func (jrm JobRepositoryMem) FindById(id string) (*domain.Job, api_error.ApiErr) 
 	jrm.mu.Lock()
 	defer jrm.mu.Unlock()
 	if len(jrm.jobList) == 0 {
-		return nil, api_error.NewNotFoundError("no jobs in joblist")
+		msg := "No jobs in joblist"
+		logger.Warn(msg)
+		return nil, api_error.NewNotFoundError(msg)
 	}
 	return filterById(jrm.jobList, id)
 }
@@ -73,7 +80,9 @@ func filterById(jList map[string]domain.Job, id string) (*domain.Job, api_error.
 			return &curJob, nil
 		}
 	}
-	return nil, api_error.NewNotFoundError(fmt.Sprintf("no job with id %v in joblist", id))
+	msg := fmt.Sprintf("No job with id %v in joblist", id)
+	logger.Info(msg)
+	return nil, api_error.NewNotFoundError(msg)
 }
 
 func (jrm JobRepositoryMem) Store(job domain.Job) api_error.ApiErr {
@@ -88,7 +97,9 @@ func (jrm JobRepositoryMem) DeleteById(id string) api_error.ApiErr {
 	jrm.mu.Lock()
 	defer jrm.mu.Unlock()
 	if len(jrm.jobList) == 0 {
-		return api_error.NewNotFoundError("no jobs in joblist")
+		msg := "No jobs in joblist"
+		logger.Info(msg)
+		return api_error.NewNotFoundError(msg)
 	}
 	_, err := filterById(jrm.jobList, id)
 	if err != nil {
@@ -106,8 +117,9 @@ func (jrm JobRepositoryMem) Dequeue(jobType string) (*domain.Job, api_error.ApiE
 	defer jrm.mu.Unlock()
 
 	if len(jrm.jobList) == 0 {
-		err := api_error.NewNotFoundError("no jobs in joblist")
-		return nil, err
+		msg := "No jobs in joblist"
+		logger.Info(msg)
+		return nil, api_error.NewNotFoundError(msg)
 	}
 	for _, job := range jrm.jobList {
 		if (job.Type == jobType) && (job.Status == domain.StatusCreated) {
@@ -118,7 +130,9 @@ func (jrm JobRepositoryMem) Dequeue(jobType string) (*domain.Job, api_error.ApiE
 		}
 	}
 	if nextJobId == "" {
-		err := api_error.NewNotFoundError("no jobs with status created in joblist")
+		msg := "No more jobs to dequeue"
+		logger.Info(msg)
+		err := api_error.NewNotFoundError(msg)
 		return nil, err
 	}
 	job, _ := filterById(jrm.jobList, nextJobId)
