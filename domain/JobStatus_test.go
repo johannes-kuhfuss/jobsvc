@@ -14,8 +14,13 @@ func Test_IsValidJobStatus_InvalidStatus_Returns_False(t *testing.T) {
 }
 
 func Test_IsValidJobStatus_ValidStatus_Returns_True(t *testing.T) {
-	valid := IsValidJobStatus("running")
+	validStatus := []string{"created", "queued", "running", "paused", "finished", "failed"}
 
-	assert.NotNil(t, valid)
-	assert.EqualValues(t, true, valid)
+	for _, status := range validStatus {
+		valid := IsValidJobStatus(status)
+
+		assert.NotNil(t, valid)
+		assert.EqualValues(t, true, valid)
+	}
+
 }

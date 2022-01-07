@@ -16,7 +16,7 @@ func Test_validateCreateUpdateJobRequest_NoType_Returns_BadRequestError(t *testi
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
-	assert.EqualValues(t, "job must have a type", err.Message())
+	assert.EqualValues(t, "Job create / update request must have a type", err.Message())
 }
 
 func Test_validateCreateJobRequest_InvalidPriority_Returns_BadRequestError(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_validateCreateJobRequest_InvalidPriority_Returns_BadRequestError(t *te
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
-	assert.EqualValues(t, fmt.Sprintf("priority value %v does not exist", prio), err.Message())
+	assert.EqualValues(t, fmt.Sprintf("Priority value %v does not exist", prio), err.Message())
 }
 
 func Test_validateCreateJobRequest_ValidRequest_Returns_NoError(t *testing.T) {
@@ -54,7 +54,7 @@ func Test_validateUpdateJobRequest_InvalidPriority_Returns_BadRequestError(t *te
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
-	assert.EqualValues(t, fmt.Sprintf("priority value %v does not exist", prio), err.Message())
+	assert.EqualValues(t, fmt.Sprintf("Priority value %v does not exist", prio), err.Message())
 }
 
 func Test_validateUpdateJobRequest_ValidRequest_Returns_NoError(t *testing.T) {
@@ -74,7 +74,7 @@ func Test_validateDequeueRequest_NoType_Returns_BadRequestError(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
-	assert.EqualValues(t, "dequeue must have a type", err.Message())
+	assert.EqualValues(t, "Dequeue request must have a type", err.Message())
 }
 
 func Test_validateDequeueRequest_ValidRequest_Returns_NoError(t *testing.T) {
@@ -94,7 +94,7 @@ func Test_validateUpdateJobStatusRequest_NoStatus_Returns_BadRequestError(t *tes
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
-	assert.EqualValues(t, "update status must have a status", err.Message())
+	assert.EqualValues(t, "Update status request must have a status", err.Message())
 }
 
 func Test_validateUpdateJobStatusRequest_InvalidStatus_Returns_BadRequestError(t *testing.T) {
@@ -127,7 +127,7 @@ func Test_validateUpdateJobHistoryRequest_NoMessage_Returns_BadRequestError(t *t
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
-	assert.EqualValues(t, "update history must have a message", err.Message())
+	assert.EqualValues(t, "Update history request must have a message", err.Message())
 }
 
 func Test_validateUpdateJobHistoryRequest_Returns_NoError(t *testing.T) {

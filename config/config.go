@@ -45,7 +45,7 @@ func InitConfig(file string, config *AppConfig) api_error.ApiErr {
 	loadConfig(file)
 	err := envconfig.Process("", config)
 	if err != nil {
-		return api_error.NewInternalServerError("Could not configure app, Check your environment variables", err)
+		return api_error.NewInternalServerError("Could not initalize configuration. Check your environment variables", err)
 	}
 	logger.Info("Done initalizing configuration")
 	return nil

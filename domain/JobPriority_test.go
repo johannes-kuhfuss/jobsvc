@@ -14,8 +14,13 @@ func Test_IsValidPriority_InvalidPriority_Returns_False(t *testing.T) {
 }
 
 func Test_IsValidPriority_ValidPriority_Returns_True(t *testing.T) {
-	valid := IsValidPriority("high")
+	validPrios := []string{"realtime", "high", "medium", "low", "idle"}
 
-	assert.NotNil(t, valid)
-	assert.EqualValues(t, true, valid)
+	for _, prio := range validPrios {
+		valid := IsValidPriority(prio)
+
+		assert.NotNil(t, valid)
+		assert.EqualValues(t, true, valid)
+	}
+
 }

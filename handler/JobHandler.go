@@ -22,8 +22,9 @@ func (jh *JobHandlers) getJobId(jobIdParam string) (string, api_error.ApiErr) {
 	jobIdParam = jh.Cfg.RunTime.BmPolicy.Sanitize(jobIdParam)
 	jobId, err := ksuid.Parse(jobIdParam)
 	if err != nil {
-		logger.Error("User Id should be a ksuid", err)
-		return "", api_error.NewBadRequestError("User id should be a ksuid")
+		msg := "User Id should be a ksuid"
+		logger.Error(msg, err)
+		return "", api_error.NewBadRequestError(msg)
 	}
 	return jobId.String(), nil
 }
@@ -31,16 +32,18 @@ func (jh *JobHandlers) getJobId(jobIdParam string) (string, api_error.ApiErr) {
 func (jh *JobHandlers) CreateJob(c *gin.Context) {
 	var newJobReq dto.CreateUpdateJobRequest
 	if err := c.ShouldBindJSON(&newJobReq); err != nil {
-		logger.Error("invalid JSON body in create job request", err)
-		apiErr := api_error.NewBadRequestError("invalid json body for job creation")
+		msg := "Invalid JSON body in create job request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&newJobReq)
 	err := validateCreateJobRequest(newJobReq)
 	if err != nil {
-		logger.Error("could not validate input data for create", err)
-		apiErr := api_error.NewBadRequestError("could not validate input data for create")
+		msg := "Could not validate input data for create job request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
@@ -100,22 +103,24 @@ func (jh JobHandlers) DeleteJobById(c *gin.Context) {
 func (jh JobHandlers) Dequeue(c *gin.Context) {
 	var dqReq dto.DequeueRequest
 	if err := c.ShouldBindJSON(&dqReq); err != nil {
-		logger.Error("invalid JSON body in dequeue request", err)
-		apiErr := api_error.NewBadRequestError("invalid json body for dequeue request")
+		msg := "Invalid JSON body in dequeue request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&dqReq)
 	err := validateDequeueRequest(dqReq)
 	if err != nil {
-		logger.Error("could not validate input data for dequeue", err)
-		apiErr := api_error.NewBadRequestError("could not validate input data for dequeue")
+		msg := "Could not validate input data for dequeue request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	result, err := jh.Service.Dequeue(dqReq)
 	if err != nil {
-		logger.Error("Service error while dequeuing next job", err)
+		logger.Error("Service error while dequeuing job", err)
 		c.JSON(err.StatusCode(), err)
 		return
 	}
@@ -130,16 +135,18 @@ func (jh JobHandlers) UpdateJob(c *gin.Context) {
 	}
 	var updJobReq dto.CreateUpdateJobRequest
 	if err := c.ShouldBindJSON(&updJobReq); err != nil {
-		logger.Error("invalid JSON body in update job request", err)
-		apiErr := api_error.NewBadRequestError("invalid json body for job update")
+		msg := "Invalid JSON body in update job request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&updJobReq)
 	err = validateUpdateJobRequest(updJobReq)
 	if err != nil {
-		logger.Error("could not validate input data for update", err)
-		apiErr := api_error.NewBadRequestError("could not validate input data for update")
+		msg := "Could not validate input data for update job request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
@@ -160,22 +167,24 @@ func (jh JobHandlers) SetStatusById(c *gin.Context) {
 	}
 	var updStatusReq dto.UpdateJobStatusRequest
 	if err := c.ShouldBindJSON(&updStatusReq); err != nil {
-		logger.Error("invalid JSON body in update job status request", err)
-		apiErr := api_error.NewBadRequestError("invalid json body for job status update")
+		msg := "Invalid JSON body in update job status request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&updStatusReq)
 	err = validateUpdateJobStatusRequest(updStatusReq)
 	if err != nil {
-		logger.Error("could not validate input data for update status", err)
-		apiErr := api_error.NewBadRequestError("could not validate input data for update status")
+		msg := "Could not validate input data for update job status request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	err = jh.Service.SetStatusById(jobId, updStatusReq)
 	if err != nil {
-		logger.Error("Service error while changing job status by id", err)
+		logger.Error("Service error while setting job status by id", err)
 		c.JSON(err.StatusCode(), err)
 		return
 	}
@@ -190,22 +199,24 @@ func (jh JobHandlers) SetHistoryById(c *gin.Context) {
 	}
 	var updHistoryReq dto.UpdateJobHistoryRequest
 	if err := c.ShouldBindJSON(&updHistoryReq); err != nil {
-		logger.Error("invalid JSON body in update job history request", err)
-		apiErr := api_error.NewBadRequestError("invalid json body for job history update")
+		msg := "Invalid JSON body in update job history request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	jh.Cfg.RunTime.Sani.Sanitize(&updHistoryReq)
 	err = validateUpdateJobHistoryRequest(updHistoryReq)
 	if err != nil {
-		logger.Error("could not validate input data for update history", err)
-		apiErr := api_error.NewBadRequestError("could not validate input data for update history")
+		msg := "Could not validate input data for update history request"
+		logger.Error(msg, err)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}
 	err = jh.Service.SetHistoryById(jobId, updHistoryReq)
 	if err != nil {
-		logger.Error("Service error while changing job history by id", err)
+		logger.Error("Service error while setting job history by id", err)
 		c.JSON(err.StatusCode(), err)
 		return
 	}
@@ -215,8 +226,9 @@ func (jh JobHandlers) SetHistoryById(c *gin.Context) {
 func (jh JobHandlers) DeleteAllJobs(c *gin.Context) {
 	force := jh.Cfg.RunTime.BmPolicy.Sanitize(c.Query("force"))
 	if force != "true" {
-		logger.Error("delete all jobs called without force=true", nil)
-		apiErr := api_error.NewBadRequestError("to delete all jobs you must use force=true")
+		msg := "Delete all jobs must be called with force=true"
+		logger.Error(msg, nil)
+		apiErr := api_error.NewBadRequestError(msg)
 		c.JSON(apiErr.StatusCode(), apiErr)
 		return
 	}

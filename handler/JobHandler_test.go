@@ -58,7 +58,7 @@ func Test_getJobId_NonKsuid_Returns_BadRequestError(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.EqualValues(t, "", jobId)
-	assert.EqualValues(t, "User id should be a ksuid", err.Message())
+	assert.EqualValues(t, "User Id should be a ksuid", err.Message())
 	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
 }
 
@@ -77,7 +77,7 @@ func Test_getJobId_WithKsuid_Returns_String(t *testing.T) {
 func Test_CreateJob_Returns_InvalidJsonError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("invalid json body for job creation")
+	apiError := api_error.NewBadRequestError("Invalid JSON body in create job request")
 	errorJson, _ := json.Marshal(apiError)
 	router.POST("/jobs", jh.CreateJob)
 	request, _ := http.NewRequest(http.MethodPost, "/jobs", nil)
@@ -91,7 +91,7 @@ func Test_CreateJob_Returns_InvalidJsonError(t *testing.T) {
 func Test_CreateJob_Returns_InvalidInputError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("could not validate input data for create")
+	apiError := api_error.NewBadRequestError("Could not validate input data for create job request")
 	errorJson, _ := json.Marshal(apiError)
 	jobReq := dto.CreateUpdateJobRequest{
 		Name:     "Job 1",
@@ -215,7 +215,7 @@ func createDummyJobList() []dto.JobResponse {
 func Test_GetJobById_Returns_InvalidIdError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("User id should be a ksuid")
+	apiError := api_error.NewBadRequestError("User Id should be a ksuid")
 	errorJson, _ := json.Marshal(apiError)
 	router.GET("/jobs/:job_id", jh.GetJobById)
 	request, _ := http.NewRequest(http.MethodGet, "/jobs/not_a_ksuid", nil)
@@ -262,7 +262,7 @@ func Test_GetJobById_Returns_NoError(t *testing.T) {
 func Test_DeleteJobById_Returns_InvalidIdError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("User id should be a ksuid")
+	apiError := api_error.NewBadRequestError("User Id should be a ksuid")
 	errorJson, _ := json.Marshal(apiError)
 	router.DELETE("/jobs/:job_id", jh.DeleteJobById)
 	request, _ := http.NewRequest(http.MethodDelete, "/jobs/not_a_ksuid", nil)
@@ -305,7 +305,7 @@ func Test_DeleteJobById_Returns_NoError(t *testing.T) {
 func Test_Dequeue_Returns_InvalidJsonError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("invalid json body for dequeue request")
+	apiError := api_error.NewBadRequestError("Invalid JSON body in dequeue request")
 	errorJson, _ := json.Marshal(apiError)
 	router.PUT("/jobs/dequeue", jh.Dequeue)
 	request, _ := http.NewRequest(http.MethodPut, "/jobs/dequeue", nil)
@@ -319,7 +319,7 @@ func Test_Dequeue_Returns_InvalidJsonError(t *testing.T) {
 func Test_Dequeue_Returns_InvalidInputError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("could not validate input data for dequeue")
+	apiError := api_error.NewBadRequestError("Could not validate input data for dequeue request")
 	errorJson, _ := json.Marshal(apiError)
 	req := dto.DequeueRequest{
 		Type: "",
@@ -376,7 +376,7 @@ func Test_Dequeue_Returns_NoError(t *testing.T) {
 func Test_UpdateJob_Returns_InvalidIdError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("User id should be a ksuid")
+	apiError := api_error.NewBadRequestError("User Id should be a ksuid")
 	errorJson, _ := json.Marshal(apiError)
 	router.PUT("/jobs/:job_id", jh.UpdateJob)
 	request, _ := http.NewRequest(http.MethodPut, "/jobs/not_a_ksuid", nil)
@@ -391,7 +391,7 @@ func Test_UpdateJob_Returns_InvalidJsonError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	id := ksuid.New()
-	apiError := api_error.NewBadRequestError("invalid json body for job update")
+	apiError := api_error.NewBadRequestError("Invalid JSON body in update job request")
 	errorJson, _ := json.Marshal(apiError)
 	router.PUT("/jobs/:job_id", jh.UpdateJob)
 	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v", id), nil)
@@ -406,7 +406,7 @@ func Test_UpdateJob_Returns_InvalidInputError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	id := ksuid.New()
-	apiError := api_error.NewBadRequestError("could not validate input data for update")
+	apiError := api_error.NewBadRequestError("Could not validate input data for update job request")
 	errorJson, _ := json.Marshal(apiError)
 	jobReq := dto.CreateUpdateJobRequest{
 		Name:     "Job 1",
@@ -467,7 +467,7 @@ func Test_UpdateJob_Returns_NoError(t *testing.T) {
 func Test_SetStatusById_Returns_InvalidIdError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("User id should be a ksuid")
+	apiError := api_error.NewBadRequestError("User Id should be a ksuid")
 	errorJson, _ := json.Marshal(apiError)
 	router.PUT("jobs/:job_id/status", jh.SetStatusById)
 	request, _ := http.NewRequest(http.MethodPut, "/jobs/not_a_ksuid/status", nil)
@@ -482,7 +482,7 @@ func Test_SetStatusById_Returns_InvalidJsonError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	id := ksuid.New()
-	apiError := api_error.NewBadRequestError("invalid json body for job status update")
+	apiError := api_error.NewBadRequestError("Invalid JSON body in update job status request")
 	errorJson, _ := json.Marshal(apiError)
 	router.PUT("jobs/:job_id/status", jh.SetStatusById)
 	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v/status", id), nil)
@@ -497,7 +497,7 @@ func Test_SetStatusById_Returns_InvalidInputError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	id := ksuid.New()
-	apiError := api_error.NewBadRequestError("could not validate input data for update status")
+	apiError := api_error.NewBadRequestError("Could not validate input data for update job status request")
 	errorJson, _ := json.Marshal(apiError)
 	jobReq := dto.UpdateJobStatusRequest{
 		Status: "bogus",
@@ -552,7 +552,7 @@ func Test_SetStatusById_Returns_NoError(t *testing.T) {
 func Test_SetHistoryById_Returns_InvalidIdError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("User id should be a ksuid")
+	apiError := api_error.NewBadRequestError("User Id should be a ksuid")
 	errorJson, _ := json.Marshal(apiError)
 	router.PUT("jobs/:job_id/history", jh.SetHistoryById)
 	request, _ := http.NewRequest(http.MethodPut, "/jobs/not_a_ksuid/history", nil)
@@ -567,7 +567,7 @@ func Test_SetHistoryById_Returns_InvalidJsonError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	id := ksuid.New()
-	apiError := api_error.NewBadRequestError("invalid json body for job history update")
+	apiError := api_error.NewBadRequestError("Invalid JSON body in update job history request")
 	errorJson, _ := json.Marshal(apiError)
 	router.PUT("jobs/:job_id/history", jh.SetHistoryById)
 	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/jobs/%v/history", id), nil)
@@ -582,7 +582,7 @@ func Test_SetHistoryById_Returns_InvalidInputError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	id := ksuid.New()
-	apiError := api_error.NewBadRequestError("could not validate input data for update history")
+	apiError := api_error.NewBadRequestError("Could not validate input data for update history request")
 	errorJson, _ := json.Marshal(apiError)
 	jobReq := dto.UpdateJobHistoryRequest{}
 	jobReqJson, _ := json.Marshal(jobReq)
@@ -635,7 +635,7 @@ func Test_SetHistoryById_Returns_NoError(t *testing.T) {
 func Test_DeleteAllJobs_NoForce_Returns_BadRequestError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	apiError := api_error.NewBadRequestError("to delete all jobs you must use force=true")
+	apiError := api_error.NewBadRequestError("Delete all jobs must be called with force=true")
 	errorJson, _ := json.Marshal(apiError)
 	router.DELETE("/jobs", jh.DeleteAllJobs)
 	request, _ := http.NewRequest(http.MethodDelete, "/jobs", nil)

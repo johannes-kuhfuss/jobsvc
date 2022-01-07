@@ -36,24 +36,10 @@ func StartApp() {
 	}
 	wireApp()
 	mapUrls()
-	createSanitizer()
-	createBmPolicy()
+	createSanitizers()
 	startRouter()
 	cfg.RunTime.DbConn.Close()
 	logger.Info("Application ended")
-}
-
-func createSanitizer() {
-	sani, err := sanitize.New()
-	if err != nil {
-		logger.Error("error creating sanitizer", err)
-		panic(err)
-	}
-	cfg.RunTime.Sani = sani
-}
-
-func createBmPolicy() {
-	cfg.RunTime.BmPolicy = bluemonday.UGCPolicy()
 }
 
 func initRouter() {
@@ -71,7 +57,7 @@ func initDb() {
 	connUrl := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", cfg.Db.Host, cfg.Db.Port, cfg.Db.Username, cfg.Db.Password, cfg.Db.Name)
 	conn, err := sqlx.Connect("postgres", connUrl)
 	if err != nil {
-		logger.Error("Could not connect to database", err)
+		logger.Error(fmt.Sprintf("Could not connect to database at %v:%v", cfg.Db.Host, cfg.Db.Port), err)
 		panic(err)
 	}
 	cfg.RunTime.DbConn = conn
@@ -82,7 +68,7 @@ func wireApp() {
 	if cfg.BackEnd == "db" {
 		jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	} else {
-		logger.Warn("using memory as job storage - jobs will not be persisted across service restarts")
+		logger.Warn("Using memory as job storage - jobs will not be persisted across service restarts")
 		jobRepo = repositories.NewJobRepositoryMem()
 	}
 	jobService = service.NewJobService(jobRepo)
@@ -90,6 +76,28 @@ func wireApp() {
 		Service: jobService,
 		Cfg:     &cfg,
 	}
+}
+
+func mapUrls() {
+	cfg.RunTime.Router.POST("/jobs", jobHandler.CreateJob)
+	cfg.RunTime.Router.GET("/jobs", jobHandler.GetAllJobs)
+	cfg.RunTime.Router.GET("/jobs/:job_id", jobHandler.GetJobById)
+	cfg.RunTime.Router.DELETE("/jobs/:job_id", jobHandler.DeleteJobById)
+	cfg.RunTime.Router.DELETE("/jobs", jobHandler.DeleteAllJobs)
+	cfg.RunTime.Router.PUT("/jobs/:job_id", jobHandler.UpdateJob)
+	cfg.RunTime.Router.PUT("/jobs/:job_id/status", jobHandler.SetStatusById)
+	cfg.RunTime.Router.PUT("/jobs/:job_id/history", jobHandler.SetHistoryById)
+	cfg.RunTime.Router.PUT("/jobs/dequeue", jobHandler.Dequeue)
+}
+
+func createSanitizers() {
+	sani, err := sanitize.New()
+	if err != nil {
+		logger.Error("Error creating sanitizer", err)
+		panic(err)
+	}
+	cfg.RunTime.Sani = sani
+	cfg.RunTime.BmPolicy = bluemonday.UGCPolicy()
 }
 
 func startRouter() {
