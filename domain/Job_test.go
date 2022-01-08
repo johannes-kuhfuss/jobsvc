@@ -212,3 +212,12 @@ func Test_NewJobFromJobRequestDto_ValidValues(t *testing.T) {
 	assert.EqualValues(t, prio, newJob.Priority)
 	assert.EqualValues(t, newJobReq.Rank, newJob.Rank)
 }
+
+func Test_GetJobDbFieldsAsStrings(t *testing.T) {
+	expectedFields := []string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status",
+		"source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}
+
+	jobFields := GetJobDbFieldsAsStrings()
+
+	assert.Equal(t, expectedFields, jobFields)
+}

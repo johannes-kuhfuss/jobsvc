@@ -173,7 +173,11 @@ func Test_GetAllJobs_Returns_BadRequestError(t *testing.T) {
 	defer teardown()
 	apiError := api_error.NewBadRequestError("database error")
 	errorJson, _ := json.Marshal(apiError)
-	mockService.EXPECT().GetAllJobs("").Return(nil, apiError)
+	safReq := dto.SortAndFilterRequest{
+		SortByField: "id",
+		SortByDir:   "ASC",
+	}
+	mockService.EXPECT().GetAllJobs(safReq).Return(nil, apiError)
 
 	router.GET("/jobs", jh.GetAllJobs)
 	request, _ := http.NewRequest(http.MethodGet, "/jobs", nil)
@@ -188,7 +192,11 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 	defer teardown()
 	dummyJobList := createDummyJobList()
 	dummyJobListJson, _ := json.Marshal(dummyJobList)
-	mockService.EXPECT().GetAllJobs("").Return(&dummyJobList, nil)
+	safReq := dto.SortAndFilterRequest{
+		SortByField: "id",
+		SortByDir:   "ASC",
+	}
+	mockService.EXPECT().GetAllJobs(safReq).Return(&dummyJobList, nil)
 
 	router.GET("/jobs", jh.GetAllJobs)
 	request, _ := http.NewRequest(http.MethodGet, "/jobs", nil)
