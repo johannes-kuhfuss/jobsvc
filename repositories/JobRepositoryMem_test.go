@@ -25,8 +25,12 @@ func setupJob() func() {
 func Test_FindAll_NoJobs_Returns_NotFoundError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
+	safReq := dto.SortAndFilterRequest{
+		SortByField: "id",
+		SortByDir:   "ASC",
+	}
 
-	jList, err := jobRepo.FindAll("")
+	jList, err := jobRepo.FindAll(safReq)
 
 	assert.Nil(t, jList)
 	assert.NotNil(t, err)
@@ -39,8 +43,12 @@ func Test_FindAll_NoJobsAfterFilter_Returns_NotFoundError(t *testing.T) {
 	defer teardown()
 	fillJobList()
 	status := "finished"
+	safReq := dto.SortAndFilterRequest{
+		SortByField: "id",
+		SortByDir:   "ASC",
+	}
 
-	jList, err := jobRepo.FindAll(status)
+	jList, err := jobRepo.FindAll(safReq)
 
 	assert.Nil(t, jList)
 	assert.NotNil(t, err)
@@ -52,8 +60,12 @@ func Test_FindAll_NoFilter_Returns_NoError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	fillJobList()
+	safReq := dto.SortAndFilterRequest{
+		SortByField: "id",
+		SortByDir:   "ASC",
+	}
 
-	jList, err := jobRepo.FindAll("")
+	jList, err := jobRepo.FindAll(safReq)
 
 	assert.NotNil(t, jList)
 	assert.Nil(t, err)
@@ -64,9 +76,12 @@ func Test_FindAll_WithFilter_Returns_NoError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	fillJobList()
-	status := "running"
+	safReq := dto.SortAndFilterRequest{
+		SortByField: "id",
+		SortByDir:   "ASC",
+	}
 
-	jList, err := jobRepo.FindAll(status)
+	jList, err := jobRepo.FindAll(safReq)
 
 	assert.NotNil(t, jList)
 	assert.Nil(t, err)

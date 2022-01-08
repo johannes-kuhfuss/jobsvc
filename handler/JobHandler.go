@@ -57,9 +57,14 @@ func (jh *JobHandlers) CreateJob(c *gin.Context) {
 }
 
 func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
-	status, _ := c.GetQuery("status")
-	status = jh.Cfg.RunTime.BmPolicy.Sanitize(status)
-	jobs, err := jh.Service.GetAllJobs(status)
+	safParams := c.Request.URL.Query()
+	safQuery, err := validateSortAndFilterRequest(safParams)
+	if err != nil {
+		logger.Error("Error parsing query parameters", err)
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+	jobs, err := jh.Service.GetAllJobs(*safQuery)
 	if err != nil {
 		logger.Error("Service error while getting all jobs", err)
 		c.JSON(err.StatusCode(), err)

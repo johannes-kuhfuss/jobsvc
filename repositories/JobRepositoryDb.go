@@ -25,18 +25,13 @@ func NewJobRepositoryDb(c *config.AppConfig) JobRepositoryDb {
 	return JobRepositoryDb{c}
 }
 
-func (jrd JobRepositoryDb) FindAll(status string) (*[]domain.Job, api_error.ApiErr) {
+func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.Job, api_error.ApiErr) {
 	conn := jrd.cfg.RunTime.DbConn
 	jobs := make([]domain.Job, 0)
 	var err error
 
-	if status == "" {
-		findAllSql := fmt.Sprintf("SELECT * FROM %v", table)
-		err = conn.Select(&jobs, findAllSql)
-	} else {
-		findAllSql := fmt.Sprintf("SELECT * FROM %v WHERE status = $1", table)
-		err = conn.Select(&jobs, findAllSql, status)
-	}
+	findAllSql := fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.SortByField, safReq.SortByDir)
+	err = conn.Select(&jobs, findAllSql)
 	if err != nil {
 		msg := "Database error getting all jobs"
 		logger.Error(msg, err)

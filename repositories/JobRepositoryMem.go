@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -24,7 +23,7 @@ func NewJobRepositoryMem() JobRepositoryMem {
 	return JobRepositoryMem{jList, &m}
 }
 
-func (jrm JobRepositoryMem) FindAll(status string) (*[]domain.Job, api_error.ApiErr) {
+func (jrm JobRepositoryMem) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.Job, api_error.ApiErr) {
 	jrm.mu.Lock()
 	defer jrm.mu.Unlock()
 	if len(jrm.jobList) == 0 {
@@ -32,11 +31,7 @@ func (jrm JobRepositoryMem) FindAll(status string) (*[]domain.Job, api_error.Api
 		logger.Info(msg)
 		return nil, api_error.NewNotFoundError(msg)
 	}
-	if strings.TrimSpace(status) == "" {
-		return convertMapToSlice(jrm.jobList), nil
-	} else {
-		return filterByStatus(jrm.jobList, status)
-	}
+	return convertMapToSlice(jrm.jobList), nil
 }
 
 func convertMapToSlice(jList map[string]domain.Job) *[]domain.Job {

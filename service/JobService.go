@@ -12,7 +12,7 @@ import (
 //go:generate mockgen -destination=../mocks/service/mockJobService.go -package=service github.com/johannes-kuhfuss/jobsvc/service JobService
 type JobService interface {
 	CreateJob(dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
-	GetAllJobs(string) (*[]dto.JobResponse, api_error.ApiErr)
+	GetAllJobs(dto.SortAndFilterRequest) (*[]dto.JobResponse, api_error.ApiErr)
 	GetJobById(string) (*dto.JobResponse, api_error.ApiErr)
 	DeleteJobById(string) api_error.ApiErr
 	Dequeue(dto.DequeueRequest) (*dto.JobResponse, api_error.ApiErr)
@@ -30,8 +30,8 @@ func NewJobService(repository domain.JobRepository) DefaultJobService {
 	return DefaultJobService{repository}
 }
 
-func (s DefaultJobService) GetAllJobs(status string) (*[]dto.JobResponse, api_error.ApiErr) {
-	jobs, err := s.repo.FindAll(status)
+func (s DefaultJobService) GetAllJobs(safReq dto.SortAndFilterRequest) (*[]dto.JobResponse, api_error.ApiErr) {
+	jobs, err := s.repo.FindAll(safReq)
 	if err != nil {
 		return nil, err
 	}

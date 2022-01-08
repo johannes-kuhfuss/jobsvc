@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -36,7 +37,7 @@ type Job struct {
 //go:generate mockgen -destination=../mocks/domain/mockJobRepository.go -package=domain github.com/johannes-kuhfuss/jobsvc/domain JobRepository
 type JobRepository interface {
 	Store(Job) api_error.ApiErr
-	FindAll(string) (*[]Job, api_error.ApiErr)
+	FindAll(dto.SortAndFilterRequest) (*[]Job, api_error.ApiErr)
 	FindById(string) (*Job, api_error.ApiErr)
 	Update(string, dto.CreateUpdateJobRequest) (*Job, api_error.ApiErr)
 	DeleteById(string) api_error.ApiErr
@@ -154,4 +155,13 @@ func NewJobFromJobRequestDto(jobReq dto.CreateUpdateJobRequest) (*Job, api_error
 	}
 
 	return newJob, nil
+}
+
+func GetJobDbFieldsAsStrings() []string {
+	var fields []string
+	val := reflect.ValueOf(Job{})
+	for i := 0; i < val.Type().NumField(); i++ {
+		fields = append(fields, string(val.Type().Field(i).Tag.Get("db")))
+	}
+	return fields
 }

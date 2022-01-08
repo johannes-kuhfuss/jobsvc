@@ -2,10 +2,14 @@ package handler
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
+	"github.com/johannes-kuhfuss/jobsvc/utils"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
+	"github.com/johannes-kuhfuss/services_utils/logger"
 )
 
 func validateCreateJobRequest(newReq dto.CreateUpdateJobRequest) api_error.ApiErr {
@@ -51,4 +55,33 @@ func validateUpdateJobHistoryRequest(newReq dto.UpdateJobHistoryRequest) api_err
 		return api_error.NewBadRequestError("Update history request must have a message")
 	}
 	return nil
+}
+
+func validateSortAndFilterRequest(safParams url.Values) (*dto.SortAndFilterRequest, api_error.ApiErr) {
+	safReq := dto.SortAndFilterRequest{}
+	sortBy := safParams.Get("sortBy")
+	if sortBy == "" {
+		sortBy = "id.asc"
+	}
+	sortBySplit := strings.Split(sortBy, ".")
+	if len(sortBySplit) != 2 {
+		msg := "Malformed sortBy parameter. Should be <field>.<sortdirection>"
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	field := sortBySplit[0]
+	order := sortBySplit[1]
+	if !utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), field) {
+		msg := fmt.Sprintf("Unknown field %v for sortBy", field)
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	if order != "desc" && order != "asc" {
+		msg := "Malformed sort direction. Should be asc or desc"
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	safReq.SortByField = field
+	safReq.SortByDir = strings.ToUpper(order)
+	return &safReq, nil
 }

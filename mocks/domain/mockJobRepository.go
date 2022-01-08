@@ -80,7 +80,7 @@ func (mr *MockJobRepositoryMockRecorder) Dequeue(arg0 interface{}) *gomock.Call 
 }
 
 // FindAll mocks base method.
-func (m *MockJobRepository) FindAll(arg0 string) (*[]domain.Job, api_error.ApiErr) {
+func (m *MockJobRepository) FindAll(arg0 dto.SortAndFilterRequest) (*[]domain.Job, api_error.ApiErr) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindAll", arg0)
 	ret0, _ := ret[0].(*[]domain.Job)

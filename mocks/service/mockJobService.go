@@ -94,7 +94,7 @@ func (mr *MockJobServiceMockRecorder) Dequeue(arg0 interface{}) *gomock.Call {
 }
 
 // GetAllJobs mocks base method.
-func (m *MockJobService) GetAllJobs(arg0 string) (*[]dto.JobResponse, api_error.ApiErr) {
+func (m *MockJobService) GetAllJobs(arg0 dto.SortAndFilterRequest) (*[]dto.JobResponse, api_error.ApiErr) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllJobs", arg0)
 	ret0, _ := ret[0].(*[]dto.JobResponse)
