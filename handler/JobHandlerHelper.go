@@ -79,6 +79,12 @@ func validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.Sort
 		return nil, err
 	}
 	safReq.Anchor = anchor
+	filters, err := extractFilters(safParams)
+	if err != nil {
+		logger.Error("Error while extracting filter parameters", err)
+		return nil, err
+	}
+	safReq.Filters = filters
 	return &safReq, nil
 }
 
@@ -147,8 +153,6 @@ func extractLimit(safParams url.Values, maxLimit int) (*int, api_error.ApiErr) {
 func extractAnchor(safParams url.Values) (string, api_error.ApiErr) {
 	anchor := safParams.Get("anchor")
 	if strings.TrimSpace(anchor) == "" {
-		msg := "No anchor parameter set in URL"
-		logger.Info(msg)
 		return "", nil
 	}
 	_, err := ksuid.Parse(anchor)
@@ -158,4 +162,9 @@ func extractAnchor(safParams url.Values) (string, api_error.ApiErr) {
 		return "", api_error.NewBadRequestError(msg)
 	}
 	return anchor, nil
+}
+
+func extractFilters(safParams url.Values) ([]dto.FilterBy, api_error.ApiErr) {
+	filters := []dto.FilterBy{}
+	return filters, nil
 }

@@ -33,7 +33,6 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 
 	orderBy := constructOrderBy(safReq)
 	findAllSql := fmt.Sprintf("SELECT * FROM %v ORDER BY %v", table, orderBy)
-	logger.Info(findAllSql)
 	err = conn.Select(&jobs, findAllSql)
 	if err != nil {
 		msg := "Database error getting all jobs"
