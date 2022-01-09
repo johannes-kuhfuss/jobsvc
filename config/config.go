@@ -20,13 +20,15 @@ type AppConfig struct {
 	Gin struct {
 		Mode string `envconfig:"GIN_MODE" default:"release"`
 	}
-	BackEnd string `envconfig:"BACKEND" default:"db"`
-	Db      struct {
+	Db struct {
 		Username string `envconfig:"DB_USERNAME" required:"true"`
 		Password string `envconfig:"DB_PASSWORD" required:"true"`
 		Host     string `envconfig:"DB_HOST" required:"true"`
 		Port     int32  `envconfig:"DB_PORT" required:"true"`
 		Name     string `envconfig:"DB_NAME" required:"true"`
+	}
+	Misc struct {
+		MaxResultLimit int `envconfig:"MAX_RESULT_LIMIT" default:"100"`
 	}
 	RunTime struct {
 		Router   *gin.Engine

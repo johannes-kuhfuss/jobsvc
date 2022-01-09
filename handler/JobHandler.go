@@ -58,7 +58,7 @@ func (jh *JobHandlers) CreateJob(c *gin.Context) {
 
 func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
 	safParams := c.Request.URL.Query()
-	safQuery, err := validateSortAndFilterRequest(safParams)
+	safQuery, err := validateSortAndFilterRequest(safParams, jh.Cfg.Misc.MaxResultLimit)
 	if err != nil {
 		logger.Error("Error parsing query parameters", err)
 		c.JSON(err.StatusCode(), err)

@@ -215,3 +215,98 @@ func Test_extractSorts_TwoSorts_Returns_NoError(t *testing.T) {
 	assert.EqualValues(t, sorts[1].Field, "rank")
 	assert.EqualValues(t, sorts[1].Dir, "DESC")
 }
+
+func Test_extractLimit_NoLimitParam_Returns_Maxlimit(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs")
+	safParams := url.Query()
+	maxLimit := 100
+
+	limit, err := extractLimit(safParams, maxLimit)
+
+	assert.NotNil(t, limit)
+	assert.Nil(t, err)
+	assert.EqualValues(t, maxLimit, *limit)
+}
+
+func Test_extractLimit_MalformedLimitParam_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?limit=abc")
+	safParams := url.Query()
+	maxLimit := 100
+
+	limit, err := extractLimit(safParams, maxLimit)
+
+	assert.Nil(t, limit)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Could not convert limit abc to integer", err.Message())
+}
+
+func Test_extractLimit_LimitParamTooLow_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?limit=-5")
+	safParams := url.Query()
+	maxLimit := 100
+
+	limit, err := extractLimit(safParams, maxLimit)
+
+	assert.Nil(t, limit)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Limit was set to -5 (too low). Must be between 1 and 100", err.Message())
+}
+
+func Test_extractLimit_LimitParamTooHigh_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?limit=200")
+	safParams := url.Query()
+	maxLimit := 100
+
+	limit, err := extractLimit(safParams, maxLimit)
+
+	assert.Nil(t, limit)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Limit was set to 200 (too high). Must be between 1 and 100", err.Message())
+}
+
+func Test_extractLimit_LimitParamOK_Returns_Limit(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?limit=50")
+	safParams := url.Query()
+	maxLimit := 100
+
+	limit, err := extractLimit(safParams, maxLimit)
+
+	assert.NotNil(t, limit)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 50, *limit)
+}
+
+func Test_extractAnchor_NoAnchor_Returns_EmptyString(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs")
+	safParams := url.Query()
+
+	anchor, err := extractAnchor(safParams)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, "", anchor)
+}
+
+func Test_extractAnchor_MalformedAnchor_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?anchor=asdf")
+	safParams := url.Query()
+
+	anchor, err := extractAnchor(safParams)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "", anchor)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Anchor should be a ksuid", err.Message())
+}
+
+func Test_extractAnchor_WithAnchor_Returns_Anchor(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?anchor=23PF6ya4xcS9Q4of5cxFd5SlFPf")
+	safParams := url.Query()
+
+	anchor, err := extractAnchor(safParams)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, "23PF6ya4xcS9Q4of5cxFd5SlFPf", anchor)
+}

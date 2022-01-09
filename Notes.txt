@@ -1,4 +1,3 @@
-Sort by two params
 Filter by
 Pagination
 Let user choose return values

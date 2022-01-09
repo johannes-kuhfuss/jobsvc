@@ -31,9 +31,7 @@ func StartApp() {
 		panic(err)
 	}
 	initRouter()
-	if cfg.BackEnd == "db" {
-		initDb()
-	}
+	initDb()
 	wireApp()
 	mapUrls()
 	createSanitizers()
@@ -65,12 +63,7 @@ func initDb() {
 }
 
 func wireApp() {
-	if cfg.BackEnd == "db" {
-		jobRepo = repositories.NewJobRepositoryDb(&cfg)
-	} else {
-		logger.Warn("Using memory as job storage - jobs will not be persisted across service restarts")
-		jobRepo = repositories.NewJobRepositoryMem()
-	}
+	jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	jobService = service.NewJobService(jobRepo)
 	jobHandler = handler.JobHandlers{
 		Service: jobService,

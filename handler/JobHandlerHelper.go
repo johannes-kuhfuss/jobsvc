@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/johannes-kuhfuss/jobsvc/domain"
@@ -10,6 +11,7 @@ import (
 	"github.com/johannes-kuhfuss/jobsvc/utils"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
+	"github.com/segmentio/ksuid"
 )
 
 func validateCreateJobRequest(newReq dto.CreateUpdateJobRequest) api_error.ApiErr {
@@ -57,13 +59,26 @@ func validateUpdateJobHistoryRequest(newReq dto.UpdateJobHistoryRequest) api_err
 	return nil
 }
 
-func validateSortAndFilterRequest(safParams url.Values) (*dto.SortAndFilterRequest, api_error.ApiErr) {
+func validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.SortAndFilterRequest, api_error.ApiErr) {
 	safReq := dto.SortAndFilterRequest{}
 	sorts, err := extractSorts(safParams)
 	if err != nil {
+		logger.Error("Error while extracting sort parameters", err)
 		return nil, err
 	}
 	safReq.Sorts = sorts
+	limit, err := extractLimit(safParams, maxLimit)
+	if err != nil {
+		logger.Error("Error while extracting limit parameter", err)
+		return nil, err
+	}
+	safReq.Limit = *limit
+	anchor, err := extractAnchor(safParams)
+	if err != nil {
+		logger.Error("Error while extracting anchor parameter", err)
+		return nil, err
+	}
+	safReq.Anchor = anchor
 	return &safReq, nil
 }
 
@@ -103,4 +118,44 @@ func extractSorts(safParams url.Values) ([]dto.SortBy, api_error.ApiErr) {
 		})
 	}
 	return sorts, nil
+}
+
+func extractLimit(safParams url.Values, maxLimit int) (*int, api_error.ApiErr) {
+	limitStr := safParams.Get("limit")
+	if limitStr == "" {
+		return &maxLimit, nil
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		msg := fmt.Sprintf("Could not convert limit %v to integer", limitStr)
+		logger.Error(msg, err)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	if limit < 1 {
+		msg := fmt.Sprintf("Limit was set to %v (too low). Must be between 1 and %v", limit, maxLimit)
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	if limit > maxLimit {
+		msg := fmt.Sprintf("Limit was set to %v (too high). Must be between 1 and %v", limit, maxLimit)
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	return &limit, nil
+}
+
+func extractAnchor(safParams url.Values) (string, api_error.ApiErr) {
+	anchor := safParams.Get("anchor")
+	if strings.TrimSpace(anchor) == "" {
+		msg := "No anchor parameter set in URL"
+		logger.Info(msg)
+		return "", nil
+	}
+	_, err := ksuid.Parse(anchor)
+	if err != nil {
+		msg := "Anchor should be a ksuid"
+		logger.Error(msg, err)
+		return "", api_error.NewBadRequestError(msg)
+	}
+	return anchor, nil
 }
