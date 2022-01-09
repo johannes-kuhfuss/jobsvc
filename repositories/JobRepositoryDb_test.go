@@ -61,12 +61,15 @@ func Test_FindAll_NoStatus_Returns_DbError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 
+	sorts := []dto.SortBy{{
+		Field: "id",
+		Dir:   "DESC",
+	}}
 	safReq := dto.SortAndFilterRequest{
-		SortByField: "id",
-		SortByDir:   "ASC",
+		Sorts: sorts,
 	}
 	sqlErr := sql.ErrConnDone
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.SortByField, safReq.SortByDir))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts[0].Field, safReq.Sorts[0].Dir))).
 		WillReturnError(sqlErr)
 
 	jobs, err := jrd.FindAll(safReq)
@@ -81,12 +84,15 @@ func Test_FindAll_NoStatusNoResults_Returns_NotFoundError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 
+	sorts := []dto.SortBy{{
+		Field: "id",
+		Dir:   "DESC",
+	}}
 	safReq := dto.SortAndFilterRequest{
-		SortByField: "id",
-		SortByDir:   "ASC",
+		Sorts: sorts,
 	}
 	rows := sqlmock.NewRows([]string{})
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.SortByField, safReq.SortByDir))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts[0].Field, safReq.Sorts[0].Dir))).
 		WillReturnRows(rows)
 
 	jobs, err := jrd.FindAll(safReq)
@@ -101,14 +107,17 @@ func Test_FindAll_WithStatus_Returns_Results(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 
+	sorts := []dto.SortBy{{
+		Field: "id",
+		Dir:   "DESC",
+	}}
 	safReq := dto.SortAndFilterRequest{
-		SortByField: "id",
-		SortByDir:   "ASC",
+		Sorts: sorts,
 	}
 	now := date.GetNowUtc()
 	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
 		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.SortByField, safReq.SortByDir))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts[0].Field, safReq.Sorts[0].Dir))).
 		WillReturnRows(rows)
 
 	jobs, err := jrd.FindAll(safReq)

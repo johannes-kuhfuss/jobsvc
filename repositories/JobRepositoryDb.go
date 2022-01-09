@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/jobsvc/config"
@@ -30,7 +31,9 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 	jobs := make([]domain.Job, 0)
 	var err error
 
-	findAllSql := fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.SortByField, safReq.SortByDir)
+	orderBy := constructOrderBy(safReq)
+	findAllSql := fmt.Sprintf("SELECT * FROM %v ORDER BY %v", table, orderBy)
+	logger.Info(findAllSql)
 	err = conn.Select(&jobs, findAllSql)
 	if err != nil {
 		msg := "Database error getting all jobs"
@@ -43,6 +46,19 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 		return nil, api_error.NewNotFoundError(msg)
 	}
 	return &jobs, nil
+}
+
+func constructOrderBy(safReq dto.SortAndFilterRequest) string {
+	var sb strings.Builder
+	for idx, val := range safReq.Sorts {
+		sb.WriteString(val.Field)
+		sb.WriteString(" ")
+		sb.WriteString(val.Dir)
+		if idx < len(safReq.Sorts)-1 {
+			sb.WriteString(",")
+		}
+	}
+	return sb.String()
 }
 
 func (jrd JobRepositoryDb) FindById(id string) (*domain.Job, api_error.ApiErr) {

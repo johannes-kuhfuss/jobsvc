@@ -1,6 +1,10 @@
 package dto
 
+type SortBy struct {
+	Field string
+	Dir   string
+}
+
 type SortAndFilterRequest struct {
-	SortByField string
-	SortByDir   string
+	Sorts []SortBy
 }

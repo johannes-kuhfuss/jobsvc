@@ -25,9 +25,12 @@ func setupJob() func() {
 func Test_FindAll_NoJobs_Returns_NotFoundError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
+	sorts := []dto.SortBy{{
+		Field: "id",
+		Dir:   "DESC",
+	}}
 	safReq := dto.SortAndFilterRequest{
-		SortByField: "id",
-		SortByDir:   "ASC",
+		Sorts: sorts,
 	}
 
 	jList, err := jobRepo.FindAll(safReq)
@@ -43,9 +46,12 @@ func Test_FindAll_NoJobsAfterFilter_Returns_NotFoundError(t *testing.T) {
 	defer teardown()
 	fillJobList()
 	status := "finished"
+	sorts := []dto.SortBy{{
+		Field: "id",
+		Dir:   "DESC",
+	}}
 	safReq := dto.SortAndFilterRequest{
-		SortByField: "id",
-		SortByDir:   "ASC",
+		Sorts: sorts,
 	}
 
 	jList, err := jobRepo.FindAll(safReq)
@@ -60,9 +66,12 @@ func Test_FindAll_NoFilter_Returns_NoError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	fillJobList()
+	sorts := []dto.SortBy{{
+		Field: "id",
+		Dir:   "DESC",
+	}}
 	safReq := dto.SortAndFilterRequest{
-		SortByField: "id",
-		SortByDir:   "ASC",
+		Sorts: sorts,
 	}
 
 	jList, err := jobRepo.FindAll(safReq)
@@ -76,9 +85,12 @@ func Test_FindAll_WithFilter_Returns_NoError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	fillJobList()
+	sorts := []dto.SortBy{{
+		Field: "id",
+		Dir:   "DESC",
+	}}
 	safReq := dto.SortAndFilterRequest{
-		SortByField: "id",
-		SortByDir:   "ASC",
+		Sorts: sorts,
 	}
 
 	jList, err := jobRepo.FindAll(safReq)

@@ -59,29 +59,48 @@ func validateUpdateJobHistoryRequest(newReq dto.UpdateJobHistoryRequest) api_err
 
 func validateSortAndFilterRequest(safParams url.Values) (*dto.SortAndFilterRequest, api_error.ApiErr) {
 	safReq := dto.SortAndFilterRequest{}
-	sortBy := safParams.Get("sortBy")
-	if sortBy == "" {
-		sortBy = "id.asc"
+	sorts, err := extractSorts(safParams)
+	if err != nil {
+		return nil, err
 	}
-	sortBySplit := strings.Split(sortBy, ".")
-	if len(sortBySplit) != 2 {
-		msg := "Malformed sortBy parameter. Should be <field>.<sortdirection>"
-		logger.Error(msg, nil)
-		return nil, api_error.NewBadRequestError(msg)
-	}
-	field := sortBySplit[0]
-	order := sortBySplit[1]
-	if !utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), field) {
-		msg := fmt.Sprintf("Unknown field %v for sortBy", field)
-		logger.Error(msg, nil)
-		return nil, api_error.NewBadRequestError(msg)
-	}
-	if order != "desc" && order != "asc" {
-		msg := "Malformed sort direction. Should be asc or desc"
-		logger.Error(msg, nil)
-		return nil, api_error.NewBadRequestError(msg)
-	}
-	safReq.SortByField = field
-	safReq.SortByDir = strings.ToUpper(order)
+	safReq.Sorts = sorts
 	return &safReq, nil
+}
+
+func extractSorts(safParams url.Values) ([]dto.SortBy, api_error.ApiErr) {
+	sorts := []dto.SortBy{}
+	sortBy := safParams["sortBy"]
+	if len(sortBy) == 0 {
+		sort := dto.SortBy{
+			Field: "id",
+			Dir:   "DESC",
+		}
+		sorts = append(sorts, sort)
+		return sorts, nil
+	}
+	for _, val := range sortBy {
+		sortBySplit := strings.Split(val, ".")
+		if len(sortBySplit) != 2 {
+			msg := "Malformed sortBy parameter. Should be <field>.<sortdirection>"
+			logger.Error(msg, nil)
+			return nil, api_error.NewBadRequestError(msg)
+		}
+		field := sortBySplit[0]
+		order := strings.ToLower(sortBySplit[1])
+		if !utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), field) {
+			msg := fmt.Sprintf("Unknown field %v for sortBy", field)
+			logger.Error(msg, nil)
+			return nil, api_error.NewBadRequestError(msg)
+		}
+		if order != "desc" && order != "asc" {
+			msg := fmt.Sprintf("Malformed sort direction %v. Should be asc or desc", order)
+			logger.Error(msg, nil)
+			return nil, api_error.NewBadRequestError(msg)
+		}
+		sorts = append(sorts, dto.SortBy{
+			Field: field,
+			Dir:   strings.ToUpper(order),
+		})
+	}
+	return sorts, nil
 }
