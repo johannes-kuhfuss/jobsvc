@@ -173,12 +173,11 @@ func Test_GetAllJobs_Returns_BadRequestError(t *testing.T) {
 	defer teardown()
 	apiError := api_error.NewBadRequestError("database error")
 	errorJson, _ := json.Marshal(apiError)
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
 	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
+		Sorts: []dto.SortBy{{
+			Field: "id",
+			Dir:   "DESC",
+		}},
 	}
 	mockService.EXPECT().GetAllJobs(safReq).Return(nil, apiError)
 
@@ -190,17 +189,29 @@ func Test_GetAllJobs_Returns_BadRequestError(t *testing.T) {
 	assert.EqualValues(t, errorJson, recorder.Body.String())
 }
 
+func Test_GetAllJobs_WrongSort_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	apiError := api_error.NewBadRequestError("Malformed sort direction bogus. Should be asc or desc")
+	errorJson, _ := json.Marshal(apiError)
+	router.GET("/jobs", jh.GetAllJobs)
+	request, _ := http.NewRequest(http.MethodGet, "/jobs?sortBy=id.bogus", nil)
+	router.ServeHTTP(recorder, request)
+
+	assert.EqualValues(t, http.StatusBadRequest, recorder.Code)
+	assert.EqualValues(t, errorJson, recorder.Body.String())
+}
+
 func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	dummyJobList := createDummyJobList()
 	dummyJobListJson, _ := json.Marshal(dummyJobList)
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
 	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
+		Sorts: []dto.SortBy{{
+			Field: "id",
+			Dir:   "DESC",
+		}},
 	}
 	mockService.EXPECT().GetAllJobs(safReq).Return(&dummyJobList, nil)
 

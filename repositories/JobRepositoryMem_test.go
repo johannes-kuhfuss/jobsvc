@@ -25,12 +25,11 @@ func setupJob() func() {
 func Test_FindAll_NoJobs_Returns_NotFoundError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
 	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
+		Sorts: []dto.SortBy{{
+			Field: "id",
+			Dir:   "DESC",
+		}},
 	}
 
 	jList, err := jobRepo.FindAll(safReq)
@@ -41,37 +40,15 @@ func Test_FindAll_NoJobs_Returns_NotFoundError(t *testing.T) {
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 }
 
-func Test_FindAll_NoJobsAfterFilter_Returns_NotFoundError(t *testing.T) {
-	teardown := setupJob()
-	defer teardown()
-	fillJobList()
-	status := "finished"
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
-	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
-	}
-
-	jList, err := jobRepo.FindAll(safReq)
-
-	assert.Nil(t, jList)
-	assert.NotNil(t, err)
-	assert.EqualValues(t, fmt.Sprintf("No jobs with status %v in joblist", status), err.Message())
-	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
-}
-
 func Test_FindAll_NoFilter_Returns_NoError(t *testing.T) {
 	teardown := setupJob()
 	defer teardown()
 	fillJobList()
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
 	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
+		Sorts: []dto.SortBy{{
+			Field: "id",
+			Dir:   "DESC",
+		}},
 	}
 
 	jList, err := jobRepo.FindAll(safReq)
@@ -79,26 +56,6 @@ func Test_FindAll_NoFilter_Returns_NoError(t *testing.T) {
 	assert.NotNil(t, jList)
 	assert.Nil(t, err)
 	assert.EqualValues(t, 2, len(*jList))
-}
-
-func Test_FindAll_WithFilter_Returns_NoError(t *testing.T) {
-	teardown := setupJob()
-	defer teardown()
-	fillJobList()
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
-	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
-	}
-
-	jList, err := jobRepo.FindAll(safReq)
-
-	assert.NotNil(t, jList)
-	assert.Nil(t, err)
-	assert.NotEqual(t, jobRepo.jobList, jList)
-	assert.EqualValues(t, 1, len(*jList))
 }
 
 func Test_FindById_NoJobs_Returns_NotFoundError(t *testing.T) {

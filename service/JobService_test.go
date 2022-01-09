@@ -34,14 +34,13 @@ func Test_GetAllJobs_Returns_NotFoundError(t *testing.T) {
 	teardown := setupJob(t)
 	defer teardown()
 	apiError := api_error.NewNotFoundError("no jobs found")
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
 	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
+		Sorts: []dto.SortBy{{
+			Field: "id",
+			Dir:   "DESC",
+		}},
 	}
-	mockJobRepo.EXPECT().FindAll("").Return(nil, apiError)
+	mockJobRepo.EXPECT().FindAll(safReq).Return(nil, apiError)
 
 	result, err := jobService.GetAllJobs(safReq)
 
@@ -62,15 +61,14 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 	jobResult := make([]dto.JobResponse, 0)
 	jobResult = append(jobResult, job1.ToJobResponseDto())
 	jobResult = append(jobResult, job2.ToJobResponseDto())
-	sorts := []dto.SortBy{{
-		Field: "id",
-		Dir:   "DESC",
-	}}
 	safReq := dto.SortAndFilterRequest{
-		Sorts: sorts,
+		Sorts: []dto.SortBy{{
+			Field: "id",
+			Dir:   "DESC",
+		}},
 	}
 
-	mockJobRepo.EXPECT().FindAll("").Return(&jobs, nil)
+	mockJobRepo.EXPECT().FindAll(safReq).Return(&jobs, nil)
 
 	result, err := jobService.GetAllJobs(safReq)
 

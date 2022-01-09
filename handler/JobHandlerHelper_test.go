@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/johannes-kuhfuss/jobsvc/dto"
@@ -138,4 +139,79 @@ func Test_validateUpdateJobHistoryRequest_Returns_NoError(t *testing.T) {
 	err := validateUpdateJobHistoryRequest(req)
 
 	assert.Nil(t, err)
+}
+
+func Test_extractSorts_NoInput_Returns_DefaultSort(t *testing.T) {
+	var safParams url.Values
+
+	sorts, err := extractSorts(safParams)
+
+	assert.NotNil(t, sorts)
+	assert.Nil(t, err)
+	assert.EqualValues(t, "id", sorts[0].Field)
+	assert.EqualValues(t, "DESC", sorts[0].Dir)
+}
+
+func Test_extractSorts_MalformedParam_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=asdf")
+	safParams := url.Query()
+
+	sorts, err := extractSorts(safParams)
+
+	assert.Nil(t, sorts)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Malformed sortBy parameter. Should be <field>.<sortdirection>", err.Message())
+}
+
+func Test_extractSorts_NonexistantField_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=asdf.asc")
+	safParams := url.Query()
+
+	sorts, err := extractSorts(safParams)
+
+	assert.Nil(t, sorts)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Unknown field asdf for sortBy", err.Message())
+}
+
+func Test_extractSorts_WrongDirection_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.down")
+	safParams := url.Query()
+
+	sorts, err := extractSorts(safParams)
+
+	assert.Nil(t, sorts)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Malformed sort direction down. Should be asc or desc", err.Message())
+}
+
+func Test_extractSorts_OneSort_Returns_NoError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc")
+	safParams := url.Query()
+
+	sorts, err := extractSorts(safParams)
+
+	assert.NotNil(t, sorts)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 1, len(sorts))
+	assert.EqualValues(t, sorts[0].Field, "id")
+	assert.EqualValues(t, sorts[0].Dir, "ASC")
+}
+
+func Test_extractSorts_TwoSorts_Returns_NoError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc&sortBy=rank.desc")
+	safParams := url.Query()
+
+	sorts, err := extractSorts(safParams)
+
+	assert.NotNil(t, sorts)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 2, len(sorts))
+	assert.EqualValues(t, sorts[0].Field, "id")
+	assert.EqualValues(t, sorts[0].Dir, "ASC")
+	assert.EqualValues(t, sorts[1].Field, "rank")
+	assert.EqualValues(t, sorts[1].Dir, "DESC")
 }
