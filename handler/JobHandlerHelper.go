@@ -63,25 +63,21 @@ func validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.Sort
 	safReq := dto.SortAndFilterRequest{}
 	sorts, err := extractSorts(safParams)
 	if err != nil {
-		logger.Error("Error while extracting sort parameters", err)
 		return nil, err
 	}
 	safReq.Sorts = sorts
 	limit, err := extractLimit(safParams, maxLimit)
 	if err != nil {
-		logger.Error("Error while extracting limit parameter", err)
 		return nil, err
 	}
 	safReq.Limit = *limit
 	anchor, err := extractAnchor(safParams)
 	if err != nil {
-		logger.Error("Error while extracting anchor parameter", err)
 		return nil, err
 	}
 	safReq.Anchor = anchor
 	filters, err := extractFilters(safParams)
 	if err != nil {
-		logger.Error("Error while extracting filter parameters", err)
 		return nil, err
 	}
 	safReq.Filters = filters
@@ -166,5 +162,37 @@ func extractAnchor(safParams url.Values) (string, api_error.ApiErr) {
 
 func extractFilters(safParams url.Values) ([]dto.FilterBy, api_error.ApiErr) {
 	filters := []dto.FilterBy{}
+	for key, val := range safParams {
+		filter := dto.FilterBy{}
+		if (key != "sortBy") && (key != "limit") && (key != "anchor") {
+			if utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), key) {
+				filter.Field = key
+				for _, innerVal := range val {
+					valSplit := strings.Split(innerVal, ":")
+					if (len(valSplit) != 1) && (len(valSplit) != 2) {
+						msg := "Malformed filter value. Should either be single value or <operaor>:<value>"
+						logger.Error(msg, nil)
+						return nil, api_error.NewBadRequestError(msg)
+					}
+					if len(valSplit) == 1 {
+						filter.Operator = "eq"
+						filter.Value = valSplit[0]
+					}
+					if len(valSplit) == 2 {
+						if !utils.SliceContainsString(dto.Operators, valSplit[0]) {
+							msg := fmt.Sprintf("Unknown operator %v for filter", valSplit[0])
+							logger.Error(msg, nil)
+							return nil, api_error.NewBadRequestError(msg)
+						}
+						filter.Operator = valSplit[0]
+						filter.Value = valSplit[1]
+					}
+				}
+				filters = append(filters, filter)
+			} else {
+				logger.Info(fmt.Sprintf("Ignoring unknown filter field %v", key))
+			}
+		}
+	}
 	return filters, nil
 }

@@ -178,6 +178,9 @@ func Test_GetAllJobs_Returns_BadRequestError(t *testing.T) {
 			Field: "id",
 			Dir:   "DESC",
 		}},
+		Filters: []dto.FilterBy{},
+		Limit:   0,
+		Anchor:  "",
 	}
 	mockService.EXPECT().GetAllJobs(safReq).Return(nil, apiError)
 
@@ -212,6 +215,9 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 			Field: "id",
 			Dir:   "DESC",
 		}},
+		Filters: []dto.FilterBy{},
+		Limit:   0,
+		Anchor:  "",
 	}
 	mockService.EXPECT().GetAllJobs(safReq).Return(&dummyJobList, nil)
 

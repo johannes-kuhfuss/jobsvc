@@ -17,3 +17,5 @@ type SortAndFilterRequest struct {
 	Limit   int
 	Anchor  string
 }
+
+var Operators = []string{"eq", "neq", "ct", "sw", "ew", "gt", "lt", "gte", "lte"}
