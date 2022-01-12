@@ -11,7 +11,6 @@ import (
 	"github.com/johannes-kuhfuss/jobsvc/utils"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
-	"github.com/segmentio/ksuid"
 )
 
 func validateCreateJobRequest(newReq dto.CreateUpdateJobRequest) api_error.ApiErr {
@@ -66,16 +65,12 @@ func validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.Sort
 		return nil, err
 	}
 	safReq.Sorts = *sort
-	limit, err := extractLimit(safParams, maxLimit)
+	limit, offset, err := extractLimitAndOffset(safParams, maxLimit)
 	if err != nil {
 		return nil, err
 	}
 	safReq.Limit = *limit
-	anchorId, err := extractAnchorId(safParams)
-	if err != nil {
-		return nil, err
-	}
-	safReq.AnchorId = anchorId
+	safReq.Offset = *offset
 	filters, err := extractFilters(safParams)
 	if err != nil {
 		return nil, err
@@ -117,49 +112,48 @@ func extractSort(safParams url.Values) (*dto.SortBy, api_error.ApiErr) {
 	return &sort, nil
 }
 
-func extractLimit(safParams url.Values, maxLimit int) (*int, api_error.ApiErr) {
+func extractLimitAndOffset(safParams url.Values, maxLimit int) (*int, *int, api_error.ApiErr) {
+	var (
+		limit  int = maxLimit
+		offset int = 0
+		err    error
+	)
 	limitStr := safParams.Get("limit")
-	if limitStr == "" {
-		return &maxLimit, nil
+	if limitStr != "" {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			msg := fmt.Sprintf("Could not convert limit %v to integer", limitStr)
+			logger.Error(msg, err)
+			return nil, nil, api_error.NewBadRequestError(msg)
+		}
+		if limit < 1 {
+			msg := fmt.Sprintf("Limit was set to %v (too low). Must be between 1 and %v", limit, maxLimit)
+			logger.Error(msg, nil)
+			return nil, nil, api_error.NewBadRequestError(msg)
+		}
+		if limit > maxLimit {
+			msg := fmt.Sprintf("Limit was set to %v (too high). Must be between 1 and %v", limit, maxLimit)
+			logger.Error(msg, nil)
+			return nil, nil, api_error.NewBadRequestError(msg)
+		}
 	}
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		msg := fmt.Sprintf("Could not convert limit %v to integer", limitStr)
-		logger.Error(msg, err)
-		return nil, api_error.NewBadRequestError(msg)
+	offsetStr := safParams.Get("offset")
+	if offsetStr != "" {
+		offset, err = strconv.Atoi(offsetStr)
+		if err != nil {
+			msg := fmt.Sprintf("Could not convert offset %v to integer", offsetStr)
+			logger.Error(msg, err)
+			return nil, nil, api_error.NewBadRequestError(msg)
+		}
 	}
-	if limit < 1 {
-		msg := fmt.Sprintf("Limit was set to %v (too low). Must be between 1 and %v", limit, maxLimit)
-		logger.Error(msg, nil)
-		return nil, api_error.NewBadRequestError(msg)
-	}
-	if limit > maxLimit {
-		msg := fmt.Sprintf("Limit was set to %v (too high). Must be between 1 and %v", limit, maxLimit)
-		logger.Error(msg, nil)
-		return nil, api_error.NewBadRequestError(msg)
-	}
-	return &limit, nil
-}
-
-func extractAnchorId(safParams url.Values) (string, api_error.ApiErr) {
-	anchorId := safParams.Get("anchor_id")
-	if strings.TrimSpace(anchorId) == "" {
-		return "", nil
-	}
-	_, err := ksuid.Parse(anchorId)
-	if err != nil {
-		msg := "Anchor Id should be a ksuid"
-		logger.Error(msg, err)
-		return "", api_error.NewBadRequestError(msg)
-	}
-	return anchorId, nil
+	return &limit, &offset, nil
 }
 
 func extractFilters(safParams url.Values) ([]dto.FilterBy, api_error.ApiErr) {
 	filters := []dto.FilterBy{}
 	for key, val := range safParams {
 		filter := dto.FilterBy{}
-		if (key != "sortBy") && (key != "limit") && (key != "anchor") {
+		if (key != "sortBy") && (key != "limit") && (key != "offset") {
 			if utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), key) {
 				filter.Field = key
 				for _, innerVal := range val {

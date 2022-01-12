@@ -3,7 +3,6 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/jobsvc/config"
@@ -29,11 +28,21 @@ func NewJobRepositoryDb(c *config.AppConfig) JobRepositoryDb {
 func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.Job, api_error.ApiErr) {
 	conn := jrd.cfg.RunTime.DbConn
 	jobs := make([]domain.Job, 0)
-	var err error
-
-	orderBy := constructOrderBy(safReq)
-	findAllSql := fmt.Sprintf("SELECT * FROM %v ORDER BY %v", table, orderBy)
-	err = conn.Select(&jobs, findAllSql)
+	var (
+		findAllSql string
+		orderBy    string
+		err        error
+	)
+	where := constructWhere(safReq)
+	orderBy = fmt.Sprintf("%v %v", safReq.Sorts.Field, safReq.Sorts.Dir)
+	logger.Info(orderBy)
+	if where == "" {
+		findAllSql = fmt.Sprintf("SELECT * FROM %v ORDER BY $1 LIMIT $2 OFFSET $3", table)
+		err = conn.Select(&jobs, findAllSql, orderBy, safReq.Limit, safReq.Offset)
+	} else {
+		findAllSql = fmt.Sprintf("SELECT * FROM %v WHERE $1 ORDER BY $2 LIMIT $3 OFFSET $4", table)
+		err = conn.Select(&jobs, findAllSql, where, orderBy, safReq.Limit, safReq.Offset)
+	}
 	if err != nil {
 		msg := "Database error getting all jobs"
 		logger.Error(msg, err)
@@ -47,12 +56,8 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 	return &jobs, nil
 }
 
-func constructOrderBy(safReq dto.SortAndFilterRequest) string {
-	var sb strings.Builder
-	sb.WriteString(safReq.Sorts.Field)
-	sb.WriteString(" ")
-	sb.WriteString(safReq.Sorts.Dir)
-	return sb.String()
+func constructWhere(safReq dto.SortAndFilterRequest) string {
+	return ""
 }
 
 func (jrd JobRepositoryDb) FindById(id string) (*domain.Job, api_error.ApiErr) {
