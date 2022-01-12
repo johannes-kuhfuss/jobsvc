@@ -294,3 +294,74 @@ func Test_extractAnchorId_WithAnchor_Returns_Anchor(t *testing.T) {
 	assert.Nil(t, err)
 	assert.EqualValues(t, "23PF6ya4xcS9Q4of5cxFd5SlFPf", anchorId)
 }
+
+func Test_extractFilters_NoFilters_Returns_EmptyResult(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs")
+	safParams := url.Query()
+
+	filters, err := extractFilters(safParams)
+
+	assert.NotNil(t, filters)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 0, len(filters))
+}
+
+func Test_extractFilters_MalformedFilters_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?status=neq:1:2")
+	safParams := url.Query()
+
+	filters, err := extractFilters(safParams)
+
+	assert.Nil(t, filters)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Malformed filter value. Should either be single value or <operator>:<value>", err.Message())
+}
+
+func Test_extractFilters_UnknownOperator_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?status=bogus:1")
+	safParams := url.Query()
+
+	filters, err := extractFilters(safParams)
+
+	assert.Nil(t, filters)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Unknown operator bogus for filter", err.Message())
+}
+
+func Test_extractFilters_OnlyUnknownField_Returns_EmptyResult(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?bogus=true")
+	safParams := url.Query()
+
+	filters, err := extractFilters(safParams)
+
+	assert.NotNil(t, filters)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 0, len(filters))
+}
+
+func Test_extractFilters_OneFieldNoOperator_Returns_ResultWithEqual(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?status=running")
+	safParams := url.Query()
+
+	filters, err := extractFilters(safParams)
+
+	assert.NotNil(t, filters)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 1, len(filters))
+	assert.EqualValues(t, "status", filters[0].Field)
+	assert.EqualValues(t, "eq", filters[0].Operator)
+	assert.EqualValues(t, "running", filters[0].Value)
+}
+
+func Test_extractFilters_TwoFieldsWithOperators_Returns_Result(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?status=neq:running&correlation_id=ct:asdf")
+	safParams := url.Query()
+
+	filters, err := extractFilters(safParams)
+
+	assert.NotNil(t, filters)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 2, len(filters))
+}

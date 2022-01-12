@@ -165,7 +165,7 @@ func extractFilters(safParams url.Values) ([]dto.FilterBy, api_error.ApiErr) {
 				for _, innerVal := range val {
 					valSplit := strings.Split(innerVal, ":")
 					if (len(valSplit) != 1) && (len(valSplit) != 2) {
-						msg := "Malformed filter value. Should either be single value or <operaor>:<value>"
+						msg := "Malformed filter value. Should either be single value or <operator>:<value>"
 						logger.Error(msg, nil)
 						return nil, api_error.NewBadRequestError(msg)
 					}
