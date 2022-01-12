@@ -61,21 +61,21 @@ func validateUpdateJobHistoryRequest(newReq dto.UpdateJobHistoryRequest) api_err
 
 func validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.SortAndFilterRequest, api_error.ApiErr) {
 	safReq := dto.SortAndFilterRequest{}
-	sorts, err := extractSorts(safParams)
+	sort, err := extractSort(safParams)
 	if err != nil {
 		return nil, err
 	}
-	safReq.Sorts = sorts
+	safReq.Sorts = *sort
 	limit, err := extractLimit(safParams, maxLimit)
 	if err != nil {
 		return nil, err
 	}
 	safReq.Limit = *limit
-	anchor, err := extractAnchor(safParams)
+	anchorId, err := extractAnchorId(safParams)
 	if err != nil {
 		return nil, err
 	}
-	safReq.Anchor = anchor
+	safReq.AnchorId = anchorId
 	filters, err := extractFilters(safParams)
 	if err != nil {
 		return nil, err
@@ -84,42 +84,37 @@ func validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.Sort
 	return &safReq, nil
 }
 
-func extractSorts(safParams url.Values) ([]dto.SortBy, api_error.ApiErr) {
-	sorts := []dto.SortBy{}
-	sortBy := safParams["sortBy"]
+func extractSort(safParams url.Values) (*dto.SortBy, api_error.ApiErr) {
+	sort := dto.SortBy{}
+	sortBy := safParams.Get("sortBy")
 	if len(sortBy) == 0 {
 		sort := dto.SortBy{
 			Field: "id",
 			Dir:   "DESC",
 		}
-		sorts = append(sorts, sort)
-		return sorts, nil
+		return &sort, nil
 	}
-	for _, val := range sortBy {
-		sortBySplit := strings.Split(val, ".")
-		if len(sortBySplit) != 2 {
-			msg := "Malformed sortBy parameter. Should be <field>.<sortdirection>"
-			logger.Error(msg, nil)
-			return nil, api_error.NewBadRequestError(msg)
-		}
-		field := sortBySplit[0]
-		order := strings.ToLower(sortBySplit[1])
-		if !utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), field) {
-			msg := fmt.Sprintf("Unknown field %v for sortBy", field)
-			logger.Error(msg, nil)
-			return nil, api_error.NewBadRequestError(msg)
-		}
-		if order != "desc" && order != "asc" {
-			msg := fmt.Sprintf("Malformed sort direction %v. Should be asc or desc", order)
-			logger.Error(msg, nil)
-			return nil, api_error.NewBadRequestError(msg)
-		}
-		sorts = append(sorts, dto.SortBy{
-			Field: field,
-			Dir:   strings.ToUpper(order),
-		})
+	sortBySplit := strings.Split(sortBy, ".")
+	if len(sortBySplit) != 2 {
+		msg := "Malformed sortBy parameter. Should be <field>.<sortdirection>"
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
 	}
-	return sorts, nil
+	field := sortBySplit[0]
+	order := strings.ToLower(sortBySplit[1])
+	if !utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), field) {
+		msg := fmt.Sprintf("Unknown field %v for sortBy", field)
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	if order != "desc" && order != "asc" {
+		msg := fmt.Sprintf("Malformed sort direction %v. Should be asc or desc", order)
+		logger.Error(msg, nil)
+		return nil, api_error.NewBadRequestError(msg)
+	}
+	sort.Field = field
+	sort.Dir = strings.ToUpper(order)
+	return &sort, nil
 }
 
 func extractLimit(safParams url.Values, maxLimit int) (*int, api_error.ApiErr) {
@@ -146,18 +141,18 @@ func extractLimit(safParams url.Values, maxLimit int) (*int, api_error.ApiErr) {
 	return &limit, nil
 }
 
-func extractAnchor(safParams url.Values) (string, api_error.ApiErr) {
-	anchor := safParams.Get("anchor")
-	if strings.TrimSpace(anchor) == "" {
+func extractAnchorId(safParams url.Values) (string, api_error.ApiErr) {
+	anchorId := safParams.Get("anchor_id")
+	if strings.TrimSpace(anchorId) == "" {
 		return "", nil
 	}
-	_, err := ksuid.Parse(anchor)
+	_, err := ksuid.Parse(anchorId)
 	if err != nil {
-		msg := "Anchor should be a ksuid"
+		msg := "Anchor Id should be a ksuid"
 		logger.Error(msg, err)
 		return "", api_error.NewBadRequestError(msg)
 	}
-	return anchor, nil
+	return anchorId, nil
 }
 
 func extractFilters(safParams url.Values) ([]dto.FilterBy, api_error.ApiErr) {

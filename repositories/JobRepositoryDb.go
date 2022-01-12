@@ -49,14 +49,9 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 
 func constructOrderBy(safReq dto.SortAndFilterRequest) string {
 	var sb strings.Builder
-	for idx, val := range safReq.Sorts {
-		sb.WriteString(val.Field)
-		sb.WriteString(" ")
-		sb.WriteString(val.Dir)
-		if idx < len(safReq.Sorts)-1 {
-			sb.WriteString(",")
-		}
-	}
+	sb.WriteString(safReq.Sorts.Field)
+	sb.WriteString(" ")
+	sb.WriteString(safReq.Sorts.Dir)
 	return sb.String()
 }
 

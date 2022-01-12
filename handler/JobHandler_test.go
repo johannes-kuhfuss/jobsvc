@@ -174,13 +174,13 @@ func Test_GetAllJobs_Returns_BadRequestError(t *testing.T) {
 	apiError := api_error.NewBadRequestError("database error")
 	errorJson, _ := json.Marshal(apiError)
 	safReq := dto.SortAndFilterRequest{
-		Sorts: []dto.SortBy{{
+		Sorts: dto.SortBy{
 			Field: "id",
 			Dir:   "DESC",
-		}},
-		Filters: []dto.FilterBy{},
-		Limit:   0,
-		Anchor:  "",
+		},
+		Filters:  []dto.FilterBy{},
+		Limit:    0,
+		AnchorId: "",
 	}
 	mockService.EXPECT().GetAllJobs(safReq).Return(nil, apiError)
 
@@ -211,13 +211,13 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 	dummyJobList := createDummyJobList()
 	dummyJobListJson, _ := json.Marshal(dummyJobList)
 	safReq := dto.SortAndFilterRequest{
-		Sorts: []dto.SortBy{{
+		Sorts: dto.SortBy{
 			Field: "id",
 			Dir:   "DESC",
-		}},
-		Filters: []dto.FilterBy{},
-		Limit:   0,
-		Anchor:  "",
+		},
+		Filters:  []dto.FilterBy{},
+		Limit:    0,
+		AnchorId: "",
 	}
 	mockService.EXPECT().GetAllJobs(safReq).Return(&dummyJobList, nil)
 

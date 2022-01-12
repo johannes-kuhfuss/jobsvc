@@ -12,10 +12,10 @@ type FilterBy struct {
 }
 
 type SortAndFilterRequest struct {
-	Sorts   []SortBy
-	Filters []FilterBy
-	Limit   int
-	Anchor  string
+	Sorts    SortBy
+	Filters  []FilterBy
+	Limit    int
+	AnchorId string
 }
 
 var Operators = []string{"eq", "neq", "ct", "sw", "ew", "gt", "lt", "gte", "lte"}
