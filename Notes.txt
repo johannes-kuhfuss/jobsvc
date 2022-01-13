@@ -1,3 +1,10 @@
 Sanitize input in sort, filter, Pagination
+Filter: handle priority
+Simple HTML UI to display jobs
+Web Sockets to update UI
+Integration tests
+Performance tests (+ large DB size)
+Authentication
+CSRF protection
 Let user choose return values
 HATEOAS
