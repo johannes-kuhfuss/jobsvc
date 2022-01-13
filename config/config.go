@@ -26,6 +26,7 @@ type AppConfig struct {
 		Host     string `envconfig:"DB_HOST" required:"true"`
 		Port     int32  `envconfig:"DB_PORT" required:"true"`
 		Name     string `envconfig:"DB_NAME" required:"true"`
+		JobTable string `envconfig:"DB_TABLE" default:"joblist"`
 	}
 	Misc struct {
 		MaxResultLimit int `envconfig:"MAX_RESULT_LIMIT" default:"100"`

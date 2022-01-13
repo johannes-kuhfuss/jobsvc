@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
@@ -95,4 +96,22 @@ func mergeJobs(oldJob *domain.Job, updJobReq dto.CreateUpdateJobRequest) *domain
 	}
 	mergedJob.History = oldJob.History
 	return &mergedJob
+}
+
+func constructWhereClause(safReq dto.SortAndFilterRequest) string {
+	var sb strings.Builder
+	for idx, where := range safReq.Filters {
+		sqlFilter := dto.SqlOperatorReplacement[where.Operator]
+		val := strings.Replace(sqlFilter.ValueReplace, "@@", fmt.Sprintf("%v", where.Value), -1)
+		sb.WriteString(where.Field)
+		sb.WriteString(" ")
+		sb.WriteString(sqlFilter.SqlOperator)
+		sb.WriteString(" '")
+		sb.WriteString(val)
+		sb.WriteString("'")
+		if idx < len(safReq.Filters)-1 {
+			sb.WriteString(" AND ")
+		}
+	}
+	return sb.String()
 }

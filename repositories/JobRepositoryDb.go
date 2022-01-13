@@ -18,10 +18,11 @@ type JobRepositoryDb struct {
 }
 
 var (
-	table string = "joblist"
+	table string
 )
 
 func NewJobRepositoryDb(c *config.AppConfig) JobRepositoryDb {
+	table = c.Db.JobTable
 	return JobRepositoryDb{c}
 }
 
@@ -30,18 +31,16 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 	jobs := make([]domain.Job, 0)
 	var (
 		findAllSql string
-		orderBy    string
 		err        error
 	)
-	where := constructWhere(safReq)
-	orderBy = fmt.Sprintf("%v %v", safReq.Sorts.Field, safReq.Sorts.Dir)
-	logger.Info(orderBy)
+	where := constructWhereClause(safReq)
+	orderBy := fmt.Sprintf("%v %v", safReq.Sorts.Field, safReq.Sorts.Dir)
 	if where == "" {
-		findAllSql = fmt.Sprintf("SELECT * FROM %v ORDER BY $1 LIMIT $2 OFFSET $3", table)
-		err = conn.Select(&jobs, findAllSql, orderBy, safReq.Limit, safReq.Offset)
+		findAllSql = fmt.Sprintf("SELECT * FROM %v ORDER BY %v LIMIT $1 OFFSET $2", table, orderBy)
+		err = conn.Select(&jobs, findAllSql, safReq.Limit, safReq.Offset)
 	} else {
-		findAllSql = fmt.Sprintf("SELECT * FROM %v WHERE $1 ORDER BY $2 LIMIT $3 OFFSET $4", table)
-		err = conn.Select(&jobs, findAllSql, where, orderBy, safReq.Limit, safReq.Offset)
+		findAllSql = fmt.Sprintf("SELECT * FROM %v WHERE %v ORDER BY %v LIMIT $1 OFFSET $2", table, where, orderBy)
+		err = conn.Select(&jobs, findAllSql, safReq.Limit, safReq.Offset)
 	}
 	if err != nil {
 		msg := "Database error getting all jobs"
@@ -54,10 +53,6 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 		return nil, api_error.NewNotFoundError(msg)
 	}
 	return &jobs, nil
-}
-
-func constructWhere(safReq dto.SortAndFilterRequest) string {
-	return ""
 }
 
 func (jrd JobRepositoryDb) FindById(id string) (*domain.Job, api_error.ApiErr) {

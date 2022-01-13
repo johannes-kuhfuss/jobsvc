@@ -354,3 +354,55 @@ func Test_extractFilters_TwoFieldsWithOperators_Returns_Result(t *testing.T) {
 	assert.Nil(t, err)
 	assert.EqualValues(t, 2, len(filters))
 }
+
+func Test_validateSortAndFilterRequest_SortFails_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.down")
+	safParams := url.Query()
+
+	params, err := validateSortAndFilterRequest(safParams, 100)
+
+	assert.Nil(t, params)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Malformed sort direction down. Should be asc or desc", err.Message())
+}
+
+func Test_validateSortAndFilterRequest_LimitFails_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc&limit=-5")
+	safParams := url.Query()
+
+	params, err := validateSortAndFilterRequest(safParams, 100)
+
+	assert.Nil(t, params)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Limit was set to -5 (too low). Must be between 1 and 100", err.Message())
+}
+
+func Test_validateSortAndFilterRequest_FiltersFail_Returns_BadRequestError(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc&limit=10&status=a:b:c")
+	safParams := url.Query()
+
+	params, err := validateSortAndFilterRequest(safParams, 100)
+
+	assert.Nil(t, params)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Malformed filter value. Should either be single value or <operator>:<value>", err.Message())
+}
+
+func Test_validateSortAndFilterRequest_ValidParams_Returns_ParsedParams(t *testing.T) {
+	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc&limit=10&status=neq:running")
+	safParams := url.Query()
+
+	params, err := validateSortAndFilterRequest(safParams, 100)
+
+	assert.NotNil(t, params)
+	assert.Nil(t, err)
+	assert.EqualValues(t, "id", params.Sorts.Field)
+	assert.EqualValues(t, "ASC", params.Sorts.Dir)
+	assert.EqualValues(t, 10, params.Limit)
+	assert.EqualValues(t, "status", params.Filters[0].Field)
+	assert.EqualValues(t, "neq", params.Filters[0].Operator)
+	assert.EqualValues(t, "running", params.Filters[0].Value)
+}

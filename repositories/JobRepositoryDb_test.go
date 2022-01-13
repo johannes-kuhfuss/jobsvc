@@ -57,7 +57,7 @@ func setupTest(t *testing.T) func() {
 	}
 }
 
-func Test_FindAll_NoStatus_Returns_DbError(t *testing.T) {
+func Test_FindAll_NoWhere_Returns_DbError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 
@@ -79,7 +79,7 @@ func Test_FindAll_NoStatus_Returns_DbError(t *testing.T) {
 	assert.EqualValues(t, "Database error getting all jobs", err.Message())
 }
 
-func Test_FindAll_NoStatusNoResults_Returns_NotFoundError(t *testing.T) {
+func Test_FindAll_NoWhereNoResults_Returns_NotFoundError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 
@@ -101,7 +101,7 @@ func Test_FindAll_NoStatusNoResults_Returns_NotFoundError(t *testing.T) {
 	assert.EqualValues(t, "No jobs found", err.Message())
 }
 
-func Test_FindAll_WithStatus_Returns_Results(t *testing.T) {
+func Test_FindAll_NoWhere_Returns_Results(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 
@@ -115,6 +115,32 @@ func Test_FindAll_WithStatus_Returns_Results(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
 		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
+		WillReturnRows(rows)
+
+	jobs, err := jrd.FindAll(safReq)
+
+	assert.NotNil(t, jobs)
+	assert.Nil(t, err)
+}
+
+func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	safReq := dto.SortAndFilterRequest{
+		Sorts: dto.SortBy{Field: "id", Dir: "DESC"},
+		Filters: []dto.FilterBy{{
+			Field:    "status",
+			Operator: "eq",
+			Value:    "running",
+		}},
+		Limit:  0,
+		Offset: 0,
+	}
+	now := date.GetNowUtc()
+	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
+		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = 'running' ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 
 	jobs, err := jrd.FindAll(safReq)

@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -113,4 +115,49 @@ func Test_mergeJobs_AllUpdates_ReturnsJob(t *testing.T) {
 	assert.EqualValues(t, prio, newJob.Priority)
 	assert.EqualValues(t, jobUpdReq.Rank, newJob.Rank)
 	assert.Contains(t, newJob.History, "Job data changed. New Data:")
+}
+
+func Test_constructWhereClause_SingleCondAllOps_Returns_WhereClause(t *testing.T) {
+	var safReq dto.SortAndFilterRequest
+	for _, op := range dto.Operators {
+		safReq = dto.SortAndFilterRequest{
+			Sorts: dto.SortBy{},
+			Filters: []dto.FilterBy{{
+				Field:    "status",
+				Operator: op,
+				Value:    "running",
+			}},
+			Limit:  0,
+			Offset: 0,
+		}
+		sqlOp := dto.SqlOperatorReplacement[op]
+		valRepl := strings.Replace(sqlOp.ValueReplace, "@@", fmt.Sprintf("%v", safReq.Filters[0].Value), -1)
+		expect := fmt.Sprintf("status %v '%v'", sqlOp.SqlOperator, valRepl)
+
+		where := constructWhereClause(safReq)
+		assert.NotNil(t, where)
+		assert.EqualValues(t, expect, where)
+	}
+}
+
+func Test_constructWhereClause_MultiCond_Returns_WhereClause(t *testing.T) {
+	safReq := dto.SortAndFilterRequest{
+		Sorts: dto.SortBy{},
+		Filters: []dto.FilterBy{{
+			Field:    "status",
+			Operator: "neq",
+			Value:    "running",
+		}, {
+			Field:    "created_at",
+			Operator: "gte",
+			Value:    "2021-12-10",
+		}},
+		Limit:  0,
+		Offset: 0,
+	}
+
+	where := constructWhereClause(safReq)
+
+	assert.NotNil(t, where)
+	assert.EqualValues(t, "status != 'running' AND created_at >= '2021-12-10'", where)
 }

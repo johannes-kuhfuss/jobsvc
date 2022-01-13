@@ -1,4 +1,3 @@
-Filter by
-Pagination
+Sanitize input in sort, filter, Pagination
 Let user choose return values
 HATEOAS
