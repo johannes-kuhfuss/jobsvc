@@ -64,14 +64,14 @@ func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
 		c.JSON(err.StatusCode(), err)
 		return
 	}
-	jobs, err := jh.Service.GetAllJobs(*safQuery)
+	jobs, totalCount, err := jh.Service.GetAllJobs(*safQuery)
 	if err != nil {
 		logger.Error("Service error while getting all jobs", err)
 		c.JSON(err.StatusCode(), err)
 		return
 	}
-	numItems := fmt.Sprintf("%v", len(*jobs))
-	c.Header("X-Total-Count", numItems)
+	countStr := fmt.Sprintf("%v", totalCount)
+	c.Header("X-Total-Count", countStr)
 	c.JSON(http.StatusOK, jobs)
 }
 

@@ -71,10 +71,11 @@ func Test_FindAll_NoWhere_Returns_DbError(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnError(sqlErr)
 
-	jobs, err := jrd.FindAll(safReq)
+	jobs, totalCount, err := jrd.FindAll(safReq)
 
 	assert.Nil(t, jobs)
 	assert.NotNil(t, err)
+	assert.EqualValues(t, 0, totalCount)
 	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
 	assert.EqualValues(t, "Database error getting all jobs", err.Message())
 }
@@ -93,10 +94,11 @@ func Test_FindAll_NoWhereNoResults_Returns_NotFoundError(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 
-	jobs, err := jrd.FindAll(safReq)
+	jobs, totalCount, err := jrd.FindAll(safReq)
 
 	assert.Nil(t, jobs)
 	assert.NotNil(t, err)
+	assert.EqualValues(t, 0, totalCount)
 	assert.EqualValues(t, http.StatusNotFound, err.StatusCode())
 	assert.EqualValues(t, "No jobs found", err.Message())
 }
@@ -117,10 +119,11 @@ func Test_FindAll_NoWhere_Returns_Results(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 
-	jobs, err := jrd.FindAll(safReq)
+	jobs, totalCount, err := jrd.FindAll(safReq)
 
 	assert.NotNil(t, jobs)
 	assert.Nil(t, err)
+	assert.EqualValues(t, 0, totalCount)
 }
 
 func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
@@ -143,10 +146,11 @@ func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = 'running' ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 
-	jobs, err := jrd.FindAll(safReq)
+	jobs, totalCount, err := jrd.FindAll(safReq)
 
 	assert.NotNil(t, jobs)
 	assert.Nil(t, err)
+	assert.EqualValues(t, 0, totalCount)
 }
 
 func Test_FindById_DbError_Returns_InternalServerError(t *testing.T) {

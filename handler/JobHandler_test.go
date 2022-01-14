@@ -182,7 +182,7 @@ func Test_GetAllJobs_Returns_BadRequestError(t *testing.T) {
 		Limit:   0,
 		Offset:  0,
 	}
-	mockService.EXPECT().GetAllJobs(safReq).Return(nil, apiError)
+	mockService.EXPECT().GetAllJobs(safReq).Return(nil, 0, apiError)
 
 	router.GET("/jobs", jh.GetAllJobs)
 	request, _ := http.NewRequest(http.MethodGet, "/jobs", nil)
@@ -219,7 +219,7 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 		Limit:   0,
 		Offset:  0,
 	}
-	mockService.EXPECT().GetAllJobs(safReq).Return(&dummyJobList, nil)
+	mockService.EXPECT().GetAllJobs(safReq).Return(&dummyJobList, 0, nil)
 
 	router.GET("/jobs", jh.GetAllJobs)
 	request, _ := http.NewRequest(http.MethodGet, "/jobs", nil)
@@ -227,9 +227,10 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, recorder.Code)
 	assert.EqualValues(t, dummyJobListJson, recorder.Body.String())
-	count := recorder.Result().Header["X-Total-Count"]
+	totalCount := recorder.Result().Header["X-Total-Count"]
 
-	assert.EqualValues(t, fmt.Sprintf("%v", len(dummyJobList)), count[0])
+	//assert.EqualValues(t, fmt.Sprintf("%v", len(dummyJobList)), totalCount[0])
+	assert.EqualValues(t, "0", totalCount[0])
 }
 
 func createDummyJobList() []dto.JobResponse {

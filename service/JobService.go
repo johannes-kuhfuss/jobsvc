@@ -12,7 +12,7 @@ import (
 //go:generate mockgen -destination=../mocks/service/mockJobService.go -package=service github.com/johannes-kuhfuss/jobsvc/service JobService
 type JobService interface {
 	CreateJob(dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr)
-	GetAllJobs(dto.SortAndFilterRequest) (*[]dto.JobResponse, api_error.ApiErr)
+	GetAllJobs(dto.SortAndFilterRequest) (*[]dto.JobResponse, int, api_error.ApiErr)
 	GetJobById(string) (*dto.JobResponse, api_error.ApiErr)
 	DeleteJobById(string) api_error.ApiErr
 	Dequeue(dto.DequeueRequest) (*dto.JobResponse, api_error.ApiErr)
@@ -30,16 +30,16 @@ func NewJobService(repository domain.JobRepository) DefaultJobService {
 	return DefaultJobService{repository}
 }
 
-func (s DefaultJobService) GetAllJobs(safReq dto.SortAndFilterRequest) (*[]dto.JobResponse, api_error.ApiErr) {
-	jobs, err := s.repo.FindAll(safReq)
+func (s DefaultJobService) GetAllJobs(safReq dto.SortAndFilterRequest) (*[]dto.JobResponse, int, api_error.ApiErr) {
+	jobs, totalCount, err := s.repo.FindAll(safReq)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	response := make([]dto.JobResponse, 0)
 	for _, job := range *jobs {
 		response = append(response, job.ToJobResponseDto())
 	}
-	return &response, nil
+	return &response, totalCount, nil
 }
 
 func (s DefaultJobService) CreateJob(jobReq dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr) {

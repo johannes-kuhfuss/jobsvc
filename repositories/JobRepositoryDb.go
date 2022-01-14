@@ -26,33 +26,39 @@ func NewJobRepositoryDb(c *config.AppConfig) JobRepositoryDb {
 	return JobRepositoryDb{c}
 }
 
-func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.Job, api_error.ApiErr) {
+func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.Job, int, api_error.ApiErr) {
 	conn := jrd.cfg.RunTime.DbConn
 	jobs := make([]domain.Job, 0)
 	var (
 		findAllSql string
+		countSql   string
 		err        error
+		totalCount int
 	)
 	where := constructWhereClause(safReq)
 	orderBy := fmt.Sprintf("%v %v", safReq.Sorts.Field, safReq.Sorts.Dir)
 	if where == "" {
 		findAllSql = fmt.Sprintf("SELECT * FROM %v ORDER BY %v LIMIT $1 OFFSET $2", table, orderBy)
 		err = conn.Select(&jobs, findAllSql, safReq.Limit, safReq.Offset)
+		countSql = fmt.Sprintf("SELECT count(*) FROM %v", table)
 	} else {
 		findAllSql = fmt.Sprintf("SELECT * FROM %v WHERE %v ORDER BY %v LIMIT $1 OFFSET $2", table, where, orderBy)
 		err = conn.Select(&jobs, findAllSql, safReq.Limit, safReq.Offset)
+		countSql = fmt.Sprintf("SELECT count(*) FROM %v WHERE %v", table, where)
 	}
 	if err != nil {
 		msg := "Database error getting all jobs"
 		logger.Error(msg, err)
-		return nil, api_error.NewInternalServerError(msg, nil)
+		return nil, 0, api_error.NewInternalServerError(msg, nil)
 	}
 	if len(jobs) == 0 {
 		msg := "No jobs found"
 		logger.Info(msg)
-		return nil, api_error.NewNotFoundError(msg)
+		return nil, 0, api_error.NewNotFoundError(msg)
 	}
-	return &jobs, nil
+	row := conn.QueryRow(countSql)
+	row.Scan(&totalCount)
+	return &jobs, totalCount, nil
 }
 
 func (jrd JobRepositoryDb) FindById(id string) (*domain.Job, api_error.ApiErr) {
