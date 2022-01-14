@@ -28,11 +28,11 @@ func isNowDate(t1, t2 time.Time) bool {
 }
 
 func TestConstants(t *testing.T) {
-	rt, _ := JobPriority.ItemByIndex(0)
-	hi, _ := JobPriority.ItemByIndex(1)
-	md, _ := JobPriority.ItemByIndex(2)
-	lo, _ := JobPriority.ItemByIndex(3)
-	id, _ := JobPriority.ItemByIndex(4)
+	rt, _ := JobPriority.ItemByIndex(50)
+	hi, _ := JobPriority.ItemByIndex(40)
+	md, _ := JobPriority.ItemByIndex(30)
+	lo, _ := JobPriority.ItemByIndex(20)
+	id, _ := JobPriority.ItemByIndex(10)
 
 	assert.EqualValues(t, StatusCreated, "created")
 	assert.EqualValues(t, StatusQueued, "queued")
@@ -90,7 +90,7 @@ func Test_NewJob_WithJobType_ReturnsNewJob(t *testing.T) {
 	assert.Empty(t, newJob.ActionDetails)
 	assert.Contains(t, newJob.History, "Job created")
 	assert.Empty(t, newJob.ExtraData)
-	assert.EqualValues(t, 2, newJob.Priority)
+	assert.EqualValues(t, 30, newJob.Priority)
 	assert.EqualValues(t, 0, newJob.Rank)
 }
 

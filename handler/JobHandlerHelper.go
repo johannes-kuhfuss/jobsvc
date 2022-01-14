@@ -170,7 +170,18 @@ func (jh JobHandlers) extractFilters(safParams url.Values) ([]dto.FilterBy, api_
 					}
 					if len(valSplit) == 1 {
 						filter.Operator = "eq"
-						filter.Value = valSplit[0]
+						if key == "priority" {
+							prio, err := domain.JobPriority.AsIndex(valSplit[0])
+							if err != nil {
+								msg := fmt.Sprintf("Priority value %v does not exist", valSplit[0])
+								logger.Error(msg, nil)
+								return nil, api_error.NewBadRequestError(msg)
+							}
+							filter.Value = prio
+						} else {
+							filter.Value = valSplit[0]
+						}
+
 					}
 					if len(valSplit) == 2 {
 						if !utils.SliceContainsString(dto.Operators, valSplit[0]) {
@@ -179,7 +190,17 @@ func (jh JobHandlers) extractFilters(safParams url.Values) ([]dto.FilterBy, api_
 							return nil, api_error.NewBadRequestError(msg)
 						}
 						filter.Operator = valSplit[0]
-						filter.Value = valSplit[1]
+						if key == "priority" {
+							prio, err := domain.JobPriority.AsIndex(valSplit[1])
+							if err != nil {
+								msg := fmt.Sprintf("Priority value %v does not exist", valSplit[1])
+								logger.Error(msg, nil)
+								return nil, api_error.NewBadRequestError(msg)
+							}
+							filter.Value = prio
+						} else {
+							filter.Value = valSplit[1]
+						}
 					}
 				}
 				filters = append(filters, filter)

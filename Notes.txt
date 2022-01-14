@@ -1,5 +1,4 @@
-Sanitize input in sort, filter, Pagination
-Filter: handle priority
+Deliver total result count in getall
 Simple HTML UI to display jobs
 Web Sockets to update UI
 Integration tests

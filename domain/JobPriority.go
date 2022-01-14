@@ -5,12 +5,12 @@ import (
 )
 
 const (
-	DefaultJobPriority int32 = 2
+	DefaultJobPriority int32 = 30
 )
 
 var (
 	JobPriority = enums.Enum{
-		Items: []enums.EnumItem{{Idx: 0, Val: "realtime"}, {Idx: 1, Val: "high"}, {Idx: 2, Val: "medium"}, {Idx: 3, Val: "low"}, {Idx: 4, Val: "idle"}},
+		Items: []enums.EnumItem{{Idx: 50, Val: "realtime"}, {Idx: 40, Val: "high"}, {Idx: 30, Val: "medium"}, {Idx: 20, Val: "low"}, {Idx: 10, Val: "idle"}},
 	}
 )
 
