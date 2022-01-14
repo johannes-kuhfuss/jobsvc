@@ -7,7 +7,7 @@ require (
 	github.com/go-sanitize/sanitize v1.0.1
 	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.3.4
-	github.com/johannes-kuhfuss/services_utils v1.0.10
+	github.com/johannes-kuhfuss/services_utils v1.0.11
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.10.4

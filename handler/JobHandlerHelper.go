@@ -8,9 +8,9 @@ import (
 
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
-	"github.com/johannes-kuhfuss/jobsvc/utils"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
+	"github.com/johannes-kuhfuss/services_utils/misc"
 )
 
 func validateCreateJobRequest(newReq dto.CreateUpdateJobRequest) api_error.ApiErr {
@@ -98,7 +98,7 @@ func (jh JobHandlers) extractSort(safParams url.Values) (*dto.SortBy, api_error.
 	}
 	field := sortBySplit[0]
 	order := strings.ToLower(sortBySplit[1])
-	if !utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), field) {
+	if !misc.SliceContainsString(domain.GetJobDbFieldsAsStrings(), field) {
 		msg := fmt.Sprintf("Unknown field %v for sortBy", field)
 		logger.Error(msg, nil)
 		return nil, api_error.NewBadRequestError(msg)
@@ -158,7 +158,7 @@ func (jh JobHandlers) extractFilters(safParams url.Values) ([]dto.FilterBy, api_
 		filter := dto.FilterBy{}
 		key = jh.Cfg.RunTime.BmPolicy.Sanitize(key)
 		if (key != "sortBy") && (key != "limit") && (key != "offset") {
-			if utils.SliceContainsString(domain.GetJobDbFieldsAsStrings(), key) {
+			if misc.SliceContainsString(domain.GetJobDbFieldsAsStrings(), key) {
 				filter.Field = key
 				for _, innerVal := range val {
 					innerVal = jh.Cfg.RunTime.BmPolicy.Sanitize(innerVal)
@@ -184,7 +184,7 @@ func (jh JobHandlers) extractFilters(safParams url.Values) ([]dto.FilterBy, api_
 
 					}
 					if len(valSplit) == 2 {
-						if !utils.SliceContainsString(dto.Operators, valSplit[0]) {
+						if !misc.SliceContainsString(dto.Operators, valSplit[0]) {
 							msg := fmt.Sprintf("Unknown operator %v for filter", valSplit[0])
 							logger.Error(msg, nil)
 							return nil, api_error.NewBadRequestError(msg)
