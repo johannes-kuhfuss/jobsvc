@@ -1,4 +1,3 @@
-Deliver total result count in getall
 Simple HTML UI to display jobs
 Web Sockets to update UI
 Integration tests
