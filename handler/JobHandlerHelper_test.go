@@ -142,9 +142,11 @@ func Test_validateUpdateJobHistoryRequest_Returns_NoError(t *testing.T) {
 }
 
 func Test_extractSorts_NoInput_Returns_DefaultSort(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	var safParams url.Values
 
-	sort, err := extractSort(safParams)
+	sort, err := jh.extractSort(safParams)
 
 	assert.NotNil(t, sort)
 	assert.Nil(t, err)
@@ -153,10 +155,12 @@ func Test_extractSorts_NoInput_Returns_DefaultSort(t *testing.T) {
 }
 
 func Test_extractSorts_MalformedParam_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=asdf")
 	safParams := url.Query()
 
-	sort, err := extractSort(safParams)
+	sort, err := jh.extractSort(safParams)
 
 	assert.Nil(t, sort)
 	assert.NotNil(t, err)
@@ -165,10 +169,12 @@ func Test_extractSorts_MalformedParam_Returns_BadRequestError(t *testing.T) {
 }
 
 func Test_extractSorts_NonexistantField_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=asdf.asc")
 	safParams := url.Query()
 
-	sort, err := extractSort(safParams)
+	sort, err := jh.extractSort(safParams)
 
 	assert.Nil(t, sort)
 	assert.NotNil(t, err)
@@ -177,10 +183,12 @@ func Test_extractSorts_NonexistantField_Returns_BadRequestError(t *testing.T) {
 }
 
 func Test_extractSorts_WrongDirection_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.down")
 	safParams := url.Query()
 
-	sort, err := extractSort(safParams)
+	sort, err := jh.extractSort(safParams)
 
 	assert.Nil(t, sort)
 	assert.NotNil(t, err)
@@ -189,10 +197,12 @@ func Test_extractSorts_WrongDirection_Returns_BadRequestError(t *testing.T) {
 }
 
 func Test_extractSorts_Returns_NoError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc")
 	safParams := url.Query()
 
-	sort, err := extractSort(safParams)
+	sort, err := jh.extractSort(safParams)
 
 	assert.NotNil(t, sort)
 	assert.Nil(t, err)
@@ -201,11 +211,13 @@ func Test_extractSorts_Returns_NoError(t *testing.T) {
 }
 
 func Test_extractLimitAndOffset_NoLimitParam_Returns_MaxlimitZeroOffset(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs")
 	safParams := url.Query()
 	maxLimit := 100
 
-	limit, offset, err := extractLimitAndOffset(safParams, maxLimit)
+	limit, offset, err := jh.extractLimitAndOffset(safParams, maxLimit)
 
 	assert.NotNil(t, limit)
 	assert.NotNil(t, offset)
@@ -215,11 +227,13 @@ func Test_extractLimitAndOffset_NoLimitParam_Returns_MaxlimitZeroOffset(t *testi
 }
 
 func Test_extractLimitAndOffset_MalformedLimitParam_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?limit=abc")
 	safParams := url.Query()
 	maxLimit := 100
 
-	limit, offset, err := extractLimitAndOffset(safParams, maxLimit)
+	limit, offset, err := jh.extractLimitAndOffset(safParams, maxLimit)
 
 	assert.Nil(t, limit)
 	assert.Nil(t, offset)
@@ -229,11 +243,13 @@ func Test_extractLimitAndOffset_MalformedLimitParam_Returns_BadRequestError(t *t
 }
 
 func Test_extractLimitAndOffset_MalformedOffsetParam_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?offset=abc")
 	safParams := url.Query()
 	maxLimit := 100
 
-	limit, offset, err := extractLimitAndOffset(safParams, maxLimit)
+	limit, offset, err := jh.extractLimitAndOffset(safParams, maxLimit)
 
 	assert.Nil(t, limit)
 	assert.Nil(t, offset)
@@ -243,11 +259,13 @@ func Test_extractLimitAndOffset_MalformedOffsetParam_Returns_BadRequestError(t *
 }
 
 func Test_extractLimitAndOffset_LimitParamTooLow_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?limit=-5")
 	safParams := url.Query()
 	maxLimit := 100
 
-	limit, offset, err := extractLimitAndOffset(safParams, maxLimit)
+	limit, offset, err := jh.extractLimitAndOffset(safParams, maxLimit)
 
 	assert.Nil(t, limit)
 	assert.Nil(t, offset)
@@ -257,11 +275,13 @@ func Test_extractLimitAndOffset_LimitParamTooLow_Returns_BadRequestError(t *test
 }
 
 func Test_extractLimitAndOffset_LimitParamTooHigh_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?limit=200")
 	safParams := url.Query()
 	maxLimit := 100
 
-	limit, offset, err := extractLimitAndOffset(safParams, maxLimit)
+	limit, offset, err := jh.extractLimitAndOffset(safParams, maxLimit)
 
 	assert.Nil(t, limit)
 	assert.Nil(t, offset)
@@ -271,11 +291,13 @@ func Test_extractLimitAndOffset_LimitParamTooHigh_Returns_BadRequestError(t *tes
 }
 
 func Test_extractLimitAndOffset_ParamsOK_Returns_Params(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?limit=50&offset=10")
 	safParams := url.Query()
 	maxLimit := 100
 
-	limit, offset, err := extractLimitAndOffset(safParams, maxLimit)
+	limit, offset, err := jh.extractLimitAndOffset(safParams, maxLimit)
 
 	assert.NotNil(t, limit)
 	assert.NotNil(t, offset)
@@ -285,10 +307,12 @@ func Test_extractLimitAndOffset_ParamsOK_Returns_Params(t *testing.T) {
 }
 
 func Test_extractFilters_NoFilters_Returns_EmptyResult(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs")
 	safParams := url.Query()
 
-	filters, err := extractFilters(safParams)
+	filters, err := jh.extractFilters(safParams)
 
 	assert.NotNil(t, filters)
 	assert.Nil(t, err)
@@ -296,10 +320,12 @@ func Test_extractFilters_NoFilters_Returns_EmptyResult(t *testing.T) {
 }
 
 func Test_extractFilters_MalformedFilters_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?status=neq:1:2")
 	safParams := url.Query()
 
-	filters, err := extractFilters(safParams)
+	filters, err := jh.extractFilters(safParams)
 
 	assert.Nil(t, filters)
 	assert.NotNil(t, err)
@@ -308,10 +334,12 @@ func Test_extractFilters_MalformedFilters_Returns_BadRequestError(t *testing.T) 
 }
 
 func Test_extractFilters_UnknownOperator_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?status=bogus:1")
 	safParams := url.Query()
 
-	filters, err := extractFilters(safParams)
+	filters, err := jh.extractFilters(safParams)
 
 	assert.Nil(t, filters)
 	assert.NotNil(t, err)
@@ -320,10 +348,12 @@ func Test_extractFilters_UnknownOperator_Returns_BadRequestError(t *testing.T) {
 }
 
 func Test_extractFilters_OnlyUnknownField_Returns_EmptyResult(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?bogus=true")
 	safParams := url.Query()
 
-	filters, err := extractFilters(safParams)
+	filters, err := jh.extractFilters(safParams)
 
 	assert.NotNil(t, filters)
 	assert.Nil(t, err)
@@ -331,10 +361,12 @@ func Test_extractFilters_OnlyUnknownField_Returns_EmptyResult(t *testing.T) {
 }
 
 func Test_extractFilters_OneFieldNoOperator_Returns_ResultWithEqual(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?status=running")
 	safParams := url.Query()
 
-	filters, err := extractFilters(safParams)
+	filters, err := jh.extractFilters(safParams)
 
 	assert.NotNil(t, filters)
 	assert.Nil(t, err)
@@ -345,10 +377,12 @@ func Test_extractFilters_OneFieldNoOperator_Returns_ResultWithEqual(t *testing.T
 }
 
 func Test_extractFilters_TwoFieldsWithOperators_Returns_Result(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?status=neq:running&correlation_id=ct:asdf")
 	safParams := url.Query()
 
-	filters, err := extractFilters(safParams)
+	filters, err := jh.extractFilters(safParams)
 
 	assert.NotNil(t, filters)
 	assert.Nil(t, err)
@@ -356,10 +390,12 @@ func Test_extractFilters_TwoFieldsWithOperators_Returns_Result(t *testing.T) {
 }
 
 func Test_validateSortAndFilterRequest_SortFails_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.down")
 	safParams := url.Query()
 
-	params, err := validateSortAndFilterRequest(safParams, 100)
+	params, err := jh.validateSortAndFilterRequest(safParams, 100)
 
 	assert.Nil(t, params)
 	assert.NotNil(t, err)
@@ -368,10 +404,12 @@ func Test_validateSortAndFilterRequest_SortFails_Returns_BadRequestError(t *test
 }
 
 func Test_validateSortAndFilterRequest_LimitFails_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc&limit=-5")
 	safParams := url.Query()
 
-	params, err := validateSortAndFilterRequest(safParams, 100)
+	params, err := jh.validateSortAndFilterRequest(safParams, 100)
 
 	assert.Nil(t, params)
 	assert.NotNil(t, err)
@@ -380,10 +418,12 @@ func Test_validateSortAndFilterRequest_LimitFails_Returns_BadRequestError(t *tes
 }
 
 func Test_validateSortAndFilterRequest_FiltersFail_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc&limit=10&status=a:b:c")
 	safParams := url.Query()
 
-	params, err := validateSortAndFilterRequest(safParams, 100)
+	params, err := jh.validateSortAndFilterRequest(safParams, 100)
 
 	assert.Nil(t, params)
 	assert.NotNil(t, err)
@@ -392,10 +432,12 @@ func Test_validateSortAndFilterRequest_FiltersFail_Returns_BadRequestError(t *te
 }
 
 func Test_validateSortAndFilterRequest_ValidParams_Returns_ParsedParams(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
 	url, _ := url.Parse("http://server:8080/jobs?sortBy=id.asc&limit=10&status=neq:running")
 	safParams := url.Query()
 
-	params, err := validateSortAndFilterRequest(safParams, 100)
+	params, err := jh.validateSortAndFilterRequest(safParams, 100)
 
 	assert.NotNil(t, params)
 	assert.Nil(t, err)
