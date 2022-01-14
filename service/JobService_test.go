@@ -69,14 +69,14 @@ func Test_GetAllJobs_Returns_NoError(t *testing.T) {
 		},
 	}
 
-	mockJobRepo.EXPECT().FindAll(safReq).Return(&jobs, 0, nil)
+	mockJobRepo.EXPECT().FindAll(safReq).Return(&jobs, len(jobs), nil)
 
 	result, totalCount, err := jobService.GetAllJobs(safReq)
 
 	assert.NotNil(t, result)
 	assert.Nil(t, err)
 	assert.Equal(t, result, &jobResult)
-	assert.EqualValues(t, 0, totalCount)
+	assert.EqualValues(t, len(jobs), totalCount)
 }
 
 func Test_CreateJob_Returns_BaqRequestError(t *testing.T) {

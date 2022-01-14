@@ -118,12 +118,14 @@ func Test_FindAll_NoWhere_Returns_Results(t *testing.T) {
 		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
+	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v", table))).WillReturnRows(countRows)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
 
 	assert.NotNil(t, jobs)
 	assert.Nil(t, err)
-	assert.EqualValues(t, 0, totalCount)
+	assert.EqualValues(t, 1, totalCount)
 }
 
 func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
@@ -145,12 +147,14 @@ func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
 		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = 'running' ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
+	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v", table))).WillReturnRows(countRows)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
 
 	assert.NotNil(t, jobs)
 	assert.Nil(t, err)
-	assert.EqualValues(t, 0, totalCount)
+	assert.EqualValues(t, 1, totalCount)
 }
 
 func Test_FindById_DbError_Returns_InternalServerError(t *testing.T) {
