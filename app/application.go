@@ -46,6 +46,7 @@ func initRouter() {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.Use(AddRequestId())
 	router.SetTrustedProxies(nil)
 	cfg.RunTime.Router = router
 }
