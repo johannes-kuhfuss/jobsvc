@@ -21,7 +21,7 @@ var (
 	cfg        config.AppConfig
 	jobRepo    domain.JobRepository
 	jobService service.DefaultJobService
-	jobHandler handler.JobHandlers
+	jobHandler handler.JobHandler
 )
 
 func StartApp() {
@@ -66,10 +66,7 @@ func initDb() {
 func wireApp() {
 	jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	jobService = service.NewJobService(jobRepo)
-	jobHandler = handler.JobHandlers{
-		Service: jobService,
-		Cfg:     &cfg,
-	}
+	jobHandler = handler.NewJobHandler(&cfg, jobService)
 }
 
 func mapUrls() {

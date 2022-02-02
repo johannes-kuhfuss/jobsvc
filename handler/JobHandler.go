@@ -13,12 +13,19 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-type JobHandlers struct {
+type JobHandler struct {
 	Service service.JobService
 	Cfg     *config.AppConfig
 }
 
-func (jh *JobHandlers) getJobId(jobIdParam string) (string, api_error.ApiErr) {
+func NewJobHandler(cfg *config.AppConfig, srv service.JobService) JobHandler {
+	return JobHandler{
+		Cfg:     cfg,
+		Service: srv,
+	}
+}
+
+func (jh *JobHandler) getJobId(jobIdParam string) (string, api_error.ApiErr) {
 	jobIdParam = jh.Cfg.RunTime.BmPolicy.Sanitize(jobIdParam)
 	jobId, err := ksuid.Parse(jobIdParam)
 	if err != nil {
@@ -29,7 +36,7 @@ func (jh *JobHandlers) getJobId(jobIdParam string) (string, api_error.ApiErr) {
 	return jobId.String(), nil
 }
 
-func (jh *JobHandlers) CreateJob(c *gin.Context) {
+func (jh *JobHandler) CreateJob(c *gin.Context) {
 	var newJobReq dto.CreateUpdateJobRequest
 	if err := c.ShouldBindJSON(&newJobReq); err != nil {
 		msg := "Invalid JSON body in create job request"
@@ -56,7 +63,7 @@ func (jh *JobHandlers) CreateJob(c *gin.Context) {
 	c.JSON(http.StatusCreated, result)
 }
 
-func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
+func (jh *JobHandler) GetAllJobs(c *gin.Context) {
 	safParams := c.Request.URL.Query()
 	safQuery, err := jh.validateSortAndFilterRequest(safParams, jh.Cfg.Misc.MaxResultLimit)
 	if err != nil {
@@ -75,7 +82,7 @@ func (jh *JobHandlers) GetAllJobs(c *gin.Context) {
 	c.JSON(http.StatusOK, jobs)
 }
 
-func (jh *JobHandlers) GetJobById(c *gin.Context) {
+func (jh *JobHandler) GetJobById(c *gin.Context) {
 	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
@@ -90,7 +97,7 @@ func (jh *JobHandlers) GetJobById(c *gin.Context) {
 	c.JSON(http.StatusOK, job)
 }
 
-func (jh JobHandlers) DeleteJobById(c *gin.Context) {
+func (jh JobHandler) DeleteJobById(c *gin.Context) {
 	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
@@ -105,7 +112,7 @@ func (jh JobHandlers) DeleteJobById(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func (jh JobHandlers) Dequeue(c *gin.Context) {
+func (jh JobHandler) Dequeue(c *gin.Context) {
 	var dqReq dto.DequeueRequest
 	if err := c.ShouldBindJSON(&dqReq); err != nil {
 		msg := "Invalid JSON body in dequeue request"
@@ -132,7 +139,7 @@ func (jh JobHandlers) Dequeue(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (jh JobHandlers) UpdateJob(c *gin.Context) {
+func (jh JobHandler) UpdateJob(c *gin.Context) {
 	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
@@ -164,7 +171,7 @@ func (jh JobHandlers) UpdateJob(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (jh JobHandlers) SetStatusById(c *gin.Context) {
+func (jh JobHandler) SetStatusById(c *gin.Context) {
 	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
@@ -196,7 +203,7 @@ func (jh JobHandlers) SetStatusById(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func (jh JobHandlers) SetHistoryById(c *gin.Context) {
+func (jh JobHandler) SetHistoryById(c *gin.Context) {
 	jobId, err := jh.getJobId(c.Param("job_id"))
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
@@ -228,7 +235,7 @@ func (jh JobHandlers) SetHistoryById(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func (jh JobHandlers) DeleteAllJobs(c *gin.Context) {
+func (jh JobHandler) DeleteAllJobs(c *gin.Context) {
 	force := jh.Cfg.RunTime.BmPolicy.Sanitize(c.Query("force"))
 	if force != "true" {
 		msg := "Delete all jobs must be called with force=true"
