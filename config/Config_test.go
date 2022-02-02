@@ -98,5 +98,5 @@ func Test_InitConfig_WithEnvFile_SetsValues(t *testing.T) {
 	assert.EqualValues(t, "db_host", testConfig.Db.Host)
 	assert.EqualValues(t, 5432, testConfig.Db.Port)
 	assert.EqualValues(t, "db_name", testConfig.Db.Name)
-	assert.EqualValues(t, false, testConfig.Server.Shutdown)
+	assert.EqualValues(t, 10, testConfig.Server.GracefulShutdownTime)
 }

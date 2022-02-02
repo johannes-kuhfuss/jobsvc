@@ -1,7 +1,14 @@
 package app
 
 import (
+	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sanitize/sanitize"
@@ -22,6 +29,10 @@ var (
 	jobRepo    domain.JobRepository
 	jobService service.DefaultJobService
 	jobHandler handler.JobHandler
+	server     http.Server
+	appEnd     chan os.Signal
+	ctx        context.Context
+	cancel     context.CancelFunc
 )
 
 func StartApp() {
@@ -31,12 +42,22 @@ func StartApp() {
 		panic(err)
 	}
 	initRouter()
+	initServer()
 	initDb()
 	wireApp()
 	mapUrls()
+	RegisterForOsSignals()
 	createSanitizers()
-	startRouter()
-	cfg.RunTime.DbConn.Close()
+	go startServer()
+
+	<-appEnd
+	cleanUp()
+
+	if srvErr := server.Shutdown(ctx); err != nil {
+		logger.Error("Graceful shutdown failed", srvErr)
+	} else {
+		logger.Info("Graceful shutdown finished")
+	}
 	logger.Info("Application ended")
 }
 
@@ -49,6 +70,37 @@ func initRouter() {
 	router.Use(AddRequestId())
 	router.SetTrustedProxies(nil)
 	cfg.RunTime.Router = router
+}
+
+func initServer() {
+	var tlsConfig tls.Config
+	if cfg.Server.UseTls {
+		tlsConfig = tls.Config{
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+			PreferServerCipherSuites: true,
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+		}
+	}
+	listenAddr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
+	server = http.Server{
+		Addr:              listenAddr,
+		Handler:           cfg.RunTime.Router,
+		ReadTimeout:       5 * time.Second,
+		ReadHeaderTimeout: 0,
+		WriteTimeout:      5 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		MaxHeaderBytes:    0,
+	}
+	if cfg.Server.UseTls {
+		server.TLSConfig = &tlsConfig
+		server.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
+	}
 }
 
 func initDb() {
@@ -81,6 +133,11 @@ func mapUrls() {
 	cfg.RunTime.Router.PUT("/jobs/dequeue", jobHandler.Dequeue)
 }
 
+func RegisterForOsSignals() {
+	appEnd = make(chan os.Signal, 1)
+	signal.Notify(appEnd, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+}
+
 func createSanitizers() {
 	sani, err := sanitize.New()
 	if err != nil {
@@ -91,11 +148,29 @@ func createSanitizers() {
 	cfg.RunTime.BmPolicy = bluemonday.UGCPolicy()
 }
 
-func startRouter() {
+func startServer() {
 	listenAddr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	logger.Info(fmt.Sprintf("Listening on %v", listenAddr))
-	if err := cfg.RunTime.Router.Run(listenAddr); err != nil {
-		logger.Error("Error while starting router", err)
-		panic(err)
+	if cfg.Server.UseTls {
+		if err := server.ListenAndServeTLS(cfg.Server.CertFile, cfg.Server.KeyFile); err != nil && err != http.ErrServerClosed {
+			logger.Error("Error while starting server", err)
+			panic(err)
+		}
+	} else {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error("Error while starting server", err)
+			panic(err)
+		}
 	}
+}
+
+func cleanUp() {
+	shutdownTime := time.Duration(cfg.Server.GracefulShutdownTime) * time.Second
+	ctx, cancel = context.WithTimeout(context.Background(), shutdownTime)
+	defer func() {
+		logger.Info("Cleaning up")
+		cfg.RunTime.DbConn.Close()
+		logger.Info("Done cleaning up")
+		cancel()
+	}()
 }
