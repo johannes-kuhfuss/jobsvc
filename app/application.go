@@ -74,6 +74,7 @@ func initRouter() {
 
 func initServer() {
 	var tlsConfig tls.Config
+
 	if cfg.Server.UseTls {
 		tlsConfig = tls.Config{
 			CipherSuites: []uint16{
@@ -87,9 +88,14 @@ func initServer() {
 			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		}
 	}
-	listenAddr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
+	if cfg.Server.UseTls {
+		cfg.RunTime.ListenAddr = fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.TlsPort)
+	} else {
+		cfg.RunTime.ListenAddr = fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
+	}
+
 	server = http.Server{
-		Addr:              listenAddr,
+		Addr:              cfg.RunTime.ListenAddr,
 		Handler:           cfg.RunTime.Router,
 		ReadTimeout:       5 * time.Second,
 		ReadHeaderTimeout: 0,
@@ -149,8 +155,7 @@ func createSanitizers() {
 }
 
 func startServer() {
-	listenAddr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
-	logger.Info(fmt.Sprintf("Listening on %v", listenAddr))
+	logger.Info(fmt.Sprintf("Listening on %v", cfg.RunTime.ListenAddr))
 	if cfg.Server.UseTls {
 		if err := server.ListenAndServeTLS(cfg.Server.CertFile, cfg.Server.KeyFile); err != nil && err != http.ErrServerClosed {
 			logger.Error("Error while starting server", err)

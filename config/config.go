@@ -36,10 +36,11 @@ type AppConfig struct {
 		MaxResultLimit int `envconfig:"MAX_RESULT_LIMIT" default:"100"`
 	}
 	RunTime struct {
-		Router   *gin.Engine
-		DbConn   *sqlx.DB
-		Sani     *sanitize.Sanitizer
-		BmPolicy *bluemonday.Policy
+		Router     *gin.Engine
+		DbConn     *sqlx.DB
+		Sani       *sanitize.Sanitizer
+		BmPolicy   *bluemonday.Policy
+		ListenAddr string
 	}
 }
 
