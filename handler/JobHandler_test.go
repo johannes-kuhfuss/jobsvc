@@ -24,7 +24,7 @@ import (
 
 var (
 	cfg         config.AppConfig
-	jh          JobHandlers
+	jh          JobHandler
 	router      *gin.Engine
 	mockService *service.MockJobService
 	recorder    *httptest.ResponseRecorder
@@ -36,10 +36,7 @@ func setupTest(t *testing.T) func() {
 	cfg.RunTime.Sani = sani
 	ctrl := gomock.NewController(t)
 	mockService = service.NewMockJobService(ctrl)
-	jh = JobHandlers{
-		Service: mockService,
-		Cfg:     &cfg,
-	}
+	jh = NewJobHandler(&cfg, mockService)
 	jh.Cfg = &cfg
 	router = gin.Default()
 	recorder = httptest.NewRecorder()

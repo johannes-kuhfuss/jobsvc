@@ -333,6 +333,62 @@ func Test_extractFilters_MalformedFilters_Returns_BadRequestError(t *testing.T) 
 	assert.EqualValues(t, "Malformed filter value. Should either be single value or <operator>:<value>", err.Message())
 }
 
+func Test_extractFilters_WrongPriorityNoOp_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	url, _ := url.Parse("http://server:8080/jobs?priority=bogus")
+	safParams := url.Query()
+
+	filters, err := jh.extractFilters(safParams)
+
+	assert.Nil(t, filters)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Priority value bogus does not exist", err.Message())
+}
+
+func Test_extractFilters_CorrectPriorityNoOp_Returns_CorrectPrioIntValue(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	url, _ := url.Parse("http://server:8080/jobs?priority=high")
+	safParams := url.Query()
+
+	filters, err := jh.extractFilters(safParams)
+
+	assert.NotNil(t, filters)
+	assert.Nil(t, err)
+	assert.EqualValues(t, filters[0].Operator, "eq")
+	assert.EqualValues(t, filters[0].Value, 40)
+}
+
+func Test_extractFilters_WrongPriorityWithOp_Returns_BadRequestError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	url, _ := url.Parse("http://server:8080/jobs?priority=neq:bogus")
+	safParams := url.Query()
+
+	filters, err := jh.extractFilters(safParams)
+
+	assert.Nil(t, filters)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.StatusCode())
+	assert.EqualValues(t, "Priority value bogus does not exist", err.Message())
+}
+
+func Test_extractFilters_CorrectPriorityWithOp_Returns_CorrectPrioIntValue(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	url, _ := url.Parse("http://server:8080/jobs?priority=gte:high")
+	safParams := url.Query()
+
+	filters, err := jh.extractFilters(safParams)
+
+	assert.NotNil(t, filters)
+	assert.Nil(t, err)
+	assert.EqualValues(t, filters[0].Operator, "gte")
+	assert.EqualValues(t, filters[0].Value, 40)
+}
+
 func Test_extractFilters_UnknownOperator_Returns_BadRequestError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()

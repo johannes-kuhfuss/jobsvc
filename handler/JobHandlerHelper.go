@@ -58,7 +58,7 @@ func validateUpdateJobHistoryRequest(newReq dto.UpdateJobHistoryRequest) api_err
 	return nil
 }
 
-func (jh JobHandlers) validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.SortAndFilterRequest, api_error.ApiErr) {
+func (jh JobHandler) validateSortAndFilterRequest(safParams url.Values, maxLimit int) (*dto.SortAndFilterRequest, api_error.ApiErr) {
 	safReq := dto.SortAndFilterRequest{}
 	sort, err := jh.extractSort(safParams)
 	if err != nil {
@@ -79,7 +79,7 @@ func (jh JobHandlers) validateSortAndFilterRequest(safParams url.Values, maxLimi
 	return &safReq, nil
 }
 
-func (jh JobHandlers) extractSort(safParams url.Values) (*dto.SortBy, api_error.ApiErr) {
+func (jh JobHandler) extractSort(safParams url.Values) (*dto.SortBy, api_error.ApiErr) {
 	sort := dto.SortBy{}
 	sortBy := safParams.Get("sortBy")
 	sortBy = jh.Cfg.RunTime.BmPolicy.Sanitize(sortBy)
@@ -113,7 +113,7 @@ func (jh JobHandlers) extractSort(safParams url.Values) (*dto.SortBy, api_error.
 	return &sort, nil
 }
 
-func (jh JobHandlers) extractLimitAndOffset(safParams url.Values, maxLimit int) (*int, *int, api_error.ApiErr) {
+func (jh JobHandler) extractLimitAndOffset(safParams url.Values, maxLimit int) (*int, *int, api_error.ApiErr) {
 	var (
 		limit  int = maxLimit
 		offset int = 0
@@ -152,7 +152,7 @@ func (jh JobHandlers) extractLimitAndOffset(safParams url.Values, maxLimit int) 
 	return &limit, &offset, nil
 }
 
-func (jh JobHandlers) extractFilters(safParams url.Values) ([]dto.FilterBy, api_error.ApiErr) {
+func (jh JobHandler) extractFilters(safParams url.Values) ([]dto.FilterBy, api_error.ApiErr) {
 	filters := []dto.FilterBy{}
 	for key, val := range safParams {
 		filter := dto.FilterBy{}
