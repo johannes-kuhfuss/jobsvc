@@ -62,7 +62,7 @@ func InitConfig(file string, config *AppConfig) api_error.ApiErr {
 func loadConfig(file string) error {
 	err := godotenv.Load(file)
 	if err != nil {
-		logger.Error("Could not open env file", err)
+		logger.Info("Could not open env file. Using Environment variable and defaults")
 		return err
 	}
 	return nil

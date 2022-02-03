@@ -58,7 +58,6 @@ func StartApp() {
 	} else {
 		logger.Info("Graceful shutdown finished")
 	}
-	logger.Info("Application ended")
 }
 
 func initRouter() {
@@ -158,12 +157,12 @@ func startServer() {
 	logger.Info(fmt.Sprintf("Listening on %v", cfg.RunTime.ListenAddr))
 	if cfg.Server.UseTls {
 		if err := server.ListenAndServeTLS(cfg.Server.CertFile, cfg.Server.KeyFile); err != nil && err != http.ErrServerClosed {
-			logger.Error("Error while starting server", err)
+			logger.Error("Error while starting https server", err)
 			panic(err)
 		}
 	} else {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("Error while starting server", err)
+			logger.Error("Error while starting http server", err)
 			panic(err)
 		}
 	}
