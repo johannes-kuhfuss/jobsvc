@@ -34,9 +34,9 @@
                         <td>{{.Id}}</td>
                         <td>{{.CorrelationId}}</td>
                         <td>{{.Name}}</td>
-                        <td>{{.CreatedAt}}</td>
+                        <td>{{.CreatedAt | formatAsDate}}</td>
                         <td>{{.CreatedBy}}</td>
-                        <td>{{.ModifiedAt}}</td>
+                        <td>{{.ModifiedAt| formatAsDate}}</td>
                         <td>{{.ModifiedBy}}</td>
                         <td>{{.Status}}</td>
                         <td>{{.Source}}</td>

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
@@ -70,7 +71,11 @@ func initRouter() {
 	router.Use(gin.Recovery())
 	router.Use(AddRequestId())
 	router.SetTrustedProxies(nil)
+	router.SetFuncMap(template.FuncMap{
+		"formatAsDate": formatAsDate,
+	})
 	router.LoadHTMLGlob("./templates/*.tmpl")
+
 	cfg.RunTime.Router = router
 }
 

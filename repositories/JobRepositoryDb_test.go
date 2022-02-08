@@ -139,7 +139,7 @@ func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
 			Operator: "eq",
 			Value:    "running",
 		}},
-		Limit:  0,
+		Limit:  10,
 		Offset: 0,
 	}
 	now := date.GetNowUtc()

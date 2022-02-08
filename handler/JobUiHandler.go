@@ -22,7 +22,13 @@ func NewJobUiHandler(cfg *config.AppConfig, svc service.JobService) JobUiHandler
 }
 
 func (uh *JobUiHandler) JobListPage(c *gin.Context) {
-	safReq := dto.SortAndFilterRequest{}
+	safReq := dto.SortAndFilterRequest{
+		Sorts: dto.SortBy{
+			Field: "id",
+			Dir:   "DESC",
+		},
+		Limit: 100,
+	}
 	jobs, _, _ := uh.Service.GetAllJobs(safReq)
 	c.HTML(http.StatusOK, "joblist.page.tmpl", gin.H{
 		"jobs": jobs,
