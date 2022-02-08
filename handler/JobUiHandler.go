@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/johannes-kuhfuss/jobsvc/config"
+	"github.com/johannes-kuhfuss/jobsvc/dto"
 )
 
 type JobUiHandler struct {
@@ -26,7 +27,10 @@ func (uh *JobUiHandler) JobListPage(c *gin.Context) {
 }
 
 func (uh *JobUiHandler) ConfigPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "config.page.tmpl", nil)
+	configData := dto.GetConfig(uh.Cfg)
+	c.HTML(http.StatusOK, "config.page.tmpl", gin.H{
+		"configdata": configData,
+	})
 }
 
 func (uh *JobUiHandler) AboutPage(c *gin.Context) {

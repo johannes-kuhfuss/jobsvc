@@ -13,34 +13,34 @@ import (
 
 type AppConfig struct {
 	Server struct {
-		Host                 string `envconfig:"SERVER_HOST"`
-		Port                 string `envconfig:"SERVER_PORT" default:"8080"`
-		TlsPort              string `envconfig:"SERVER_TLS_PORT" default:"8443"`
-		GracefulShutdownTime int    `envconfig:"GRACEFUL_SHUTDOWN_TIME" default:"10"`
-		UseTls               bool   `envconfig:"USE_TLS" default:"false"`
-		CertFile             string `envconfig:"CERT_FILE" default:"./cert/cert.pem"`
-		KeyFile              string `envconfig:"KEY_FILE" default:"./cert/cert.key"`
+		Host                 string `envconfig:"SERVER_HOST" json:"serverHost"`
+		Port                 string `envconfig:"SERVER_PORT" default:"8080" json:"serverPort"`
+		TlsPort              string `envconfig:"SERVER_TLS_PORT" default:"8443" json:"serverTlsPort"`
+		GracefulShutdownTime int    `envconfig:"GRACEFUL_SHUTDOWN_TIME" default:"10" json:"gracefulShutdownTime"`
+		UseTls               bool   `envconfig:"USE_TLS" default:"false" json:"serverUseTls"`
+		CertFile             string `envconfig:"CERT_FILE" default:"./cert/cert.pem" json:"serverCertFile"`
+		KeyFile              string `envconfig:"KEY_FILE" default:"./cert/cert.key" json:"serverKeyFile"`
 	}
 	Gin struct {
-		Mode string `envconfig:"GIN_MODE" default:"release"`
+		Mode string `envconfig:"GIN_MODE" default:"release" json:"ginMode"`
 	}
 	Db struct {
-		Username string `envconfig:"DB_USERNAME" required:"true"`
-		Password string `envconfig:"DB_PASSWORD" required:"true"`
-		Host     string `envconfig:"DB_HOST" required:"true"`
-		Port     int32  `envconfig:"DB_PORT" required:"true"`
-		Name     string `envconfig:"DB_NAME" required:"true"`
-		JobTable string `envconfig:"DB_TABLE" default:"joblist"`
+		Username string `envconfig:"DB_USERNAME" required:"true" json:"dbUserName"`
+		Password string `envconfig:"DB_PASSWORD" required:"true" json:"-"`
+		Host     string `envconfig:"DB_HOST" required:"true" json:"dbHost"`
+		Port     int32  `envconfig:"DB_PORT" required:"true" json:"dbPort"`
+		Name     string `envconfig:"DB_NAME" required:"true" json:"dbName"`
+		JobTable string `envconfig:"DB_TABLE" default:"joblist" json:"dbTableName"`
 	}
 	Misc struct {
-		MaxResultLimit int `envconfig:"MAX_RESULT_LIMIT" default:"100"`
+		MaxResultLimit int `envconfig:"MAX_RESULT_LIMIT" default:"100" json:"maxResultLimit"`
 	}
 	RunTime struct {
-		Router     *gin.Engine
-		DbConn     *sqlx.DB
-		Sani       *sanitize.Sanitizer
-		BmPolicy   *bluemonday.Policy
-		ListenAddr string
+		Router     *gin.Engine         `json:"-"`
+		DbConn     *sqlx.DB            `json:"-"`
+		Sani       *sanitize.Sanitizer `json:"-"`
+		BmPolicy   *bluemonday.Policy  `json:"-"`
+		ListenAddr string              `json:"-"`
 	}
 }
 
