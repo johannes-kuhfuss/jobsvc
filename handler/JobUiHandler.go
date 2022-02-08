@@ -18,10 +18,6 @@ func NewJobUiHandler(cfg *config.AppConfig) JobUiHandler {
 	}
 }
 
-func (uh *JobUiHandler) LandingPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "landing.page.tmpl", nil)
-}
-
 func (uh *JobUiHandler) JobListPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "joblist.page.tmpl", nil)
 }

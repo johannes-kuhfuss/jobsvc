@@ -1,6 +1,10 @@
 package dto
 
-import "github.com/johannes-kuhfuss/jobsvc/config"
+import (
+	"time"
+
+	"github.com/johannes-kuhfuss/jobsvc/config"
+)
 
 type ConfigResp struct {
 	ServerHost                 string
@@ -17,6 +21,7 @@ type ConfigResp struct {
 	DbName                     string
 	DbJobTable                 string
 	MaxResultLimit             int
+	StartDate                  time.Time
 }
 
 func GetConfig(cfg *config.AppConfig) ConfigResp {
@@ -35,6 +40,7 @@ func GetConfig(cfg *config.AppConfig) ConfigResp {
 		DbName:                     cfg.Db.Name,
 		DbJobTable:                 cfg.Db.JobTable,
 		MaxResultLimit:             cfg.Misc.MaxResultLimit,
+		StartDate:                  cfg.RunTime.StartDate,
 	}
 	if cfg.Server.Host == "" {
 		resp.ServerHost = "localhost"

@@ -17,31 +17,31 @@
                     <tbody>
                         <tr>
                             <td>Host</td>
-                            <td>{{ .configdata.ServerHost}}</td>
+                            <td>{{ .configdata.ServerHost }}</td>
                         </tr>
                         <tr>
                             <td>Port</td>
-                            <td>{{ .configdata.ServerPort}}</td>
+                            <td>{{ .configdata.ServerPort }}</td>
                         </tr>
                         <tr>
                             <td>TLS Port</td>
-                            <td>{{ .configdata.ServerTlsPort}}</td>
+                            <td>{{ .configdata.ServerTlsPort }}</td>
                         </tr>
                         <tr>
                             <td>Graceful Shutdown Time</td>
-                            <td>{{ .configdata.ServerGracefulShutdownTime}}</td>
+                            <td>{{ .configdata.ServerGracefulShutdownTime }}</td>
                         </tr>
                         <tr>
                             <td>Use TLS</td>
-                            <td>{{ .configdata.ServerUseTls}}</td>
+                            <td>{{ .configdata.ServerUseTls }}</td>
                         </tr>
                         <tr>
                             <td>Certificate File</td>
-                            <td>{{ .configdata.ServerCertFile}}</td>
+                            <td>{{ .configdata.ServerCertFile }}</td>
                         </tr>
                         <tr>
                             <td>Key File</td>
-                            <td>{{ .configdata.ServerKeyFile}}</td>
+                            <td>{{ .configdata.ServerKeyFile }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -56,23 +56,23 @@
                     <tbody>
                         <tr>
                             <td>Host</td>
-                            <td>{{ .configdata.DbHost}}</td>
+                            <td>{{ .configdata.DbHost }}</td>
                         </tr>
                         <tr>
                             <td>Port</td>
-                            <td>{{ .configdata.DbPort}}</td>
+                            <td>{{ .configdata.DbPort }}</td>
                         </tr>
                         <tr>
                             <td>User</td>
-                            <td>{{ .configdata.DbUsername}}</td>
+                            <td>{{ .configdata.DbUsername }}</td>
                         </tr>
                         <tr>
                             <td>Database Name</td>
-                            <td>{{ .configdata.DbName}}</td>
+                            <td>{{ .configdata.DbName }}</td>
                         </tr>
                         <tr>
                             <td>Jobs Table</td>
-                            <td>{{ .configdata.DbJobTable}}</td>
+                            <td>{{ .configdata.DbJobTable }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -86,12 +86,16 @@
                     </thead>
                     <tbody>
                         <tr>
+                            <td>Start Date</td>
+                            <td>{{ .configdata.StartDate }}</td>
+                        </tr>
+                        <tr>
                             <td>Gin-Gonic Mode</td>
-                            <td>{{ .configdata.GinMode}}</td>
+                            <td>{{ .configdata.GinMode }}</td>
                         </tr>
                         <tr>
                             <td>Maximum Results Limit Per Page</td>
-                            <td>{{ .configdata.MaxResultLimit}}</td>
+                            <td>{{ .configdata.MaxResultLimit }}</td>
                         </tr>
                         </tbody>
                 </table>

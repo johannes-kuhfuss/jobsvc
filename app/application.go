@@ -17,6 +17,7 @@ import (
 	"github.com/johannes-kuhfuss/jobsvc/handler"
 	"github.com/johannes-kuhfuss/jobsvc/repositories"
 	"github.com/johannes-kuhfuss/jobsvc/service"
+	"github.com/johannes-kuhfuss/services_utils/date"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/microcosm-cc/bluemonday"
 
@@ -141,8 +142,7 @@ func mapUrls() {
 	cfg.RunTime.Router.PUT("/jobs/:job_id/history", jobHandler.SetHistoryById)
 	cfg.RunTime.Router.PUT("/jobs/dequeue", jobHandler.Dequeue)
 	// UI
-	cfg.RunTime.Router.GET("/", jobUiHandler.LandingPage)
-	cfg.RunTime.Router.GET("/joblist", jobUiHandler.JobListPage)
+	cfg.RunTime.Router.GET("/", jobUiHandler.JobListPage)
 	cfg.RunTime.Router.GET("/config", jobUiHandler.ConfigPage)
 	cfg.RunTime.Router.GET("/about", jobUiHandler.AboutPage)
 }
@@ -164,6 +164,7 @@ func createSanitizers() {
 
 func startServer() {
 	logger.Info(fmt.Sprintf("Listening on %v", cfg.RunTime.ListenAddr))
+	cfg.RunTime.StartDate = date.GetNowUtc()
 	if cfg.Server.UseTls {
 		if err := server.ListenAndServeTLS(cfg.Server.CertFile, cfg.Server.KeyFile); err != nil && err != http.ErrServerClosed {
 			logger.Error("Error while starting https server", err)
