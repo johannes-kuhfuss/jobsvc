@@ -127,7 +127,7 @@ func wireApp() {
 	jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	jobService = service.NewJobService(jobRepo)
 	jobHandler = handler.NewJobHandler(&cfg, jobService)
-	jobUiHandler = handler.NewJobUiHandler(&cfg)
+	jobUiHandler = handler.NewJobUiHandler(&cfg, jobService)
 }
 
 func mapUrls() {

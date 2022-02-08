@@ -6,20 +6,27 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
+	"github.com/johannes-kuhfuss/jobsvc/service"
 )
 
 type JobUiHandler struct {
-	Cfg *config.AppConfig
+	Service service.JobService
+	Cfg     *config.AppConfig
 }
 
-func NewJobUiHandler(cfg *config.AppConfig) JobUiHandler {
+func NewJobUiHandler(cfg *config.AppConfig, svc service.JobService) JobUiHandler {
 	return JobUiHandler{
-		Cfg: cfg,
+		Cfg:     cfg,
+		Service: svc,
 	}
 }
 
 func (uh *JobUiHandler) JobListPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "joblist.page.tmpl", nil)
+	safReq := dto.SortAndFilterRequest{}
+	jobs, _, _ := uh.Service.GetAllJobs(safReq)
+	c.HTML(http.StatusOK, "joblist.page.tmpl", gin.H{
+		"jobs": jobs,
+	})
 }
 
 func (uh *JobUiHandler) ConfigPage(c *gin.Context) {

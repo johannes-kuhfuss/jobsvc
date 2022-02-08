@@ -18,10 +18,10 @@ type JobHandler struct {
 	Cfg     *config.AppConfig
 }
 
-func NewJobHandler(cfg *config.AppConfig, srv service.JobService) JobHandler {
+func NewJobHandler(cfg *config.AppConfig, svc service.JobService) JobHandler {
 	return JobHandler{
 		Cfg:     cfg,
-		Service: srv,
+		Service: svc,
 	}
 }
 
