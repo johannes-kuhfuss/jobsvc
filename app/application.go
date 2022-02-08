@@ -25,14 +25,15 @@ import (
 )
 
 var (
-	cfg        config.AppConfig
-	jobRepo    domain.JobRepository
-	jobService service.DefaultJobService
-	jobHandler handler.JobHandler
-	server     http.Server
-	appEnd     chan os.Signal
-	ctx        context.Context
-	cancel     context.CancelFunc
+	cfg          config.AppConfig
+	jobRepo      domain.JobRepository
+	jobService   service.DefaultJobService
+	jobHandler   handler.JobHandler
+	server       http.Server
+	appEnd       chan os.Signal
+	ctx          context.Context
+	cancel       context.CancelFunc
+	jobUiHandler handler.JobUiHandler
 )
 
 func StartApp() {
@@ -68,6 +69,7 @@ func initRouter() {
 	router.Use(gin.Recovery())
 	router.Use(AddRequestId())
 	router.SetTrustedProxies(nil)
+	router.LoadHTMLGlob("./templates/*.tmpl")
 	cfg.RunTime.Router = router
 }
 
@@ -124,9 +126,11 @@ func wireApp() {
 	jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	jobService = service.NewJobService(jobRepo)
 	jobHandler = handler.NewJobHandler(&cfg, jobService)
+	jobUiHandler = handler.NewJobUiHandler(&cfg)
 }
 
 func mapUrls() {
+	// API
 	cfg.RunTime.Router.POST("/jobs", jobHandler.CreateJob)
 	cfg.RunTime.Router.GET("/jobs", jobHandler.GetAllJobs)
 	cfg.RunTime.Router.GET("/jobs/:job_id", jobHandler.GetJobById)
@@ -136,6 +140,11 @@ func mapUrls() {
 	cfg.RunTime.Router.PUT("/jobs/:job_id/status", jobHandler.SetStatusById)
 	cfg.RunTime.Router.PUT("/jobs/:job_id/history", jobHandler.SetHistoryById)
 	cfg.RunTime.Router.PUT("/jobs/dequeue", jobHandler.Dequeue)
+	// UI
+	cfg.RunTime.Router.GET("/", jobUiHandler.LandingPage)
+	cfg.RunTime.Router.GET("/joblist", jobUiHandler.JobListPage)
+	cfg.RunTime.Router.GET("/config", jobUiHandler.ConfigPage)
+	cfg.RunTime.Router.GET("/about", jobUiHandler.AboutPage)
 }
 
 func RegisterForOsSignals() {
