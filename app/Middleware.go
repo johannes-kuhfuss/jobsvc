@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
-	"github.com/johannes-kuhfuss/services_utils/misc"
 )
 
 func AddRequestId() gin.HandlerFunc {
@@ -19,11 +18,10 @@ func AddRequestId() gin.HandlerFunc {
 
 func validateApiKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		validKeys := []string{"abc"}
 		apiKey := strings.TrimSpace(c.Request.Header.Get("Authorization"))
 		split := strings.Split(apiKey, "Bearer ")
 		if len(split) == 2 {
-			if misc.SliceContainsString(validKeys, split[1]) {
+			if cfg.Misc.ApiKey == split[1] {
 				return
 			} else {
 				err := api_error.NewUnauthenticatedError("Could not verify API key")
