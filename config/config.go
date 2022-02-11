@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sanitize/sanitize"
+	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
 	"github.com/johannes-kuhfuss/services_utils/logger"
@@ -35,7 +36,8 @@ type AppConfig struct {
 		JobTable string `envconfig:"DB_TABLE" default:"joblist"`
 	}
 	Misc struct {
-		MaxResultLimit int `envconfig:"MAX_RESULT_LIMIT" default:"100"`
+		MaxResultLimit int    `envconfig:"MAX_RESULT_LIMIT" default:"100"`
+		ApiKey         string `envconfig:"API_KEY"`
 	}
 	RunTime struct {
 		Router     *gin.Engine
@@ -57,6 +59,10 @@ func InitConfig(file string, config *AppConfig) api_error.ApiErr {
 	err := envconfig.Process("", config)
 	if err != nil {
 		return api_error.NewInternalServerError("Could not initalize configuration. Check your environment variables", err)
+	}
+	if config.Misc.ApiKey == "" {
+		id, _ := uuid.NewV4()
+		config.Misc.ApiKey = id.String()
 	}
 	logger.Info("Done initalizing configuration")
 	return nil
