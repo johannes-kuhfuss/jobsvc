@@ -10,3 +10,4 @@ func formatAsDate(t time.Time) string {
 	hour, minute, second := t.Clock()
 	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minute, second)
 }
+

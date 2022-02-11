@@ -1,28 +1,37 @@
 package app
 
 import (
-	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
-	"github.com/justinas/nosurf"
+	"github.com/johannes-kuhfuss/services_utils/api_error"
+	"github.com/johannes-kuhfuss/services_utils/misc"
 )
-
-func NoSurf(next http.Handler) http.Handler {
-	csrfHandler := nosurf.New(next)
-	csrfHandler.SetBaseCookie(http.Cookie{
-		Path:     "/",
-		Secure:   false,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
-	return csrfHandler
-}
 
 func AddRequestId() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, _ := uuid.NewV4()
 		c.Writer.Header().Set("X-Request-Id", id.String())
 		c.Next()
+	}
+}
+
+func validateApiKey() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		validKeys := []string{"abc"}
+		apiKey := strings.TrimSpace(c.Request.Header.Get("Authorization"))
+		split := strings.Split(apiKey, "Bearer ")
+		if len(split) == 2 {
+			if misc.SliceContainsString(validKeys, split[1]) {
+				return
+			} else {
+				err := api_error.NewUnauthenticatedError("Could not verify API key")
+				c.AbortWithStatusJSON(err.StatusCode(), err)
+			}
+		} else {
+			err := api_error.NewUnauthenticatedError("Could not verify API key")
+			c.AbortWithStatusJSON(err.StatusCode(), err)
+		}
 	}
 }

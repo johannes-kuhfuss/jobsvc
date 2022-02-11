@@ -136,7 +136,7 @@ func wireApp() {
 }
 
 func mapUrls() {
-	api := cfg.RunTime.Router.Group("/jobs")
+	api := cfg.RunTime.Router.Group("/jobs", validateApiKey())
 	{
 		api.POST("/", jobHandler.CreateJob)
 		api.GET("/", jobHandler.GetAllJobs)
