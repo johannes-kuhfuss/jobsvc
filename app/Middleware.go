@@ -17,7 +17,7 @@ func AddRequestId() gin.HandlerFunc {
 	}
 }
 
-func validateApiKey() gin.HandlerFunc {
+func validateAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := strings.TrimSpace(c.Request.Header.Get("Authorization"))
 		split := strings.Split(apiKey, "Bearer ")
