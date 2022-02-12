@@ -3,5 +3,4 @@ Integration tests
 Performance tests (+ large DB size)
 CSRF protection
 Let user choose return values
-Metrics : https://prometheus.io/docs/guides/go-application/
 Move (business) logic from Repo to service?
