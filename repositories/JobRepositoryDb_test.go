@@ -356,8 +356,8 @@ func Test_Dequeue_TransactionCommitError_Returns_InternalServerError(t *testing.
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
 		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
-		WithArgs(AnyTime{}, "running", AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history, progress) = ($1, $2, $3, $4) WHERE id = $5", table))).
+		WithArgs(AnyTime{}, "running", AnyString{}, 1, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit().WillReturnError(sqlErr)
 
 	job, err := jrd.Dequeue(jobType)
@@ -380,8 +380,8 @@ func Test_Dequeue_NoError_Returns_Job(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
 		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
-		WithArgs(AnyTime{}, "running", AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history, progress) = ($1, $2, $3, $4) WHERE id = $5", table))).
+		WithArgs(AnyTime{}, "running", AnyString{}, 1, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	job, err := jrd.Dequeue(jobType)
