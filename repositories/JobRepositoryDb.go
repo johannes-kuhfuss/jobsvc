@@ -143,6 +143,8 @@ func (jrd JobRepositoryDb) Dequeue(jobType string) (*domain.Job, api_error.ApiEr
 		logger.Error(msg, sqlErr)
 		return nil, api_error.NewInternalServerError(msg, nil)
 	}
+	nextJob.ModifiedAt = now
+	nextJob.Status = "running"
 	return &nextJob, nil
 }
 
