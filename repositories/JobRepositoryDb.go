@@ -130,8 +130,8 @@ func (jrd JobRepositoryDb) Dequeue(jobType string) (*domain.Job, api_error.ApiEr
 	}
 	nextJob.AddHistory("Dequeuing job for processing")
 	now := date.GetNowUtc()
-	sqlUpdate := fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table)
-	_, sqlErr = tx.Exec(sqlUpdate, now, "running", nextJob.History, nextJob.Id.String())
+	sqlUpdate := fmt.Sprintf("UPDATE %v SET (modified_at, status, history, progress) = ($1, $2, $3, $4) WHERE id = $5", table)
+	_, sqlErr = tx.Exec(sqlUpdate, now, "running", nextJob.History, 1, nextJob.Id.String())
 	if sqlErr != nil {
 		msg := "Database error dequeuing next job (update)"
 		logger.Error(msg, sqlErr)
