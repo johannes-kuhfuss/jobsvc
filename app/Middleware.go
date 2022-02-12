@@ -1,12 +1,14 @@
 package app
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
+	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/johannes-kuhfuss/services_utils/misc"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -41,7 +43,9 @@ func prometheusMetrics() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.FullPath()
 		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path))
+		c.Next()
 		statusCode := c.Writer.Status()
+		logger.Info(fmt.Sprintf("StatusCode: %v", statusCode))
 		responseStatus.WithLabelValues(strconv.Itoa(statusCode)).Inc()
 		totalRequests.WithLabelValues(path).Inc()
 		timer.ObserveDuration()
