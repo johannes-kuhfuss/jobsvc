@@ -36,8 +36,8 @@ type AppConfig struct {
 		JobTable string `envconfig:"DB_TABLE" default:"joblist"`
 	}
 	Misc struct {
-		MaxResultLimit int    `envconfig:"MAX_RESULT_LIMIT" default:"100"`
-		ApiKey         string `envconfig:"API_KEY"`
+		MaxResultLimit int      `envconfig:"MAX_RESULT_LIMIT" default:"100"`
+		ApiKeys        []string `envconfig:"API_KEYS"`
 	}
 	RunTime struct {
 		Router     *gin.Engine
@@ -60,9 +60,9 @@ func InitConfig(file string, config *AppConfig) api_error.ApiErr {
 	if err != nil {
 		return api_error.NewInternalServerError("Could not initalize configuration. Check your environment variables", err)
 	}
-	if config.Misc.ApiKey == "" {
+	if len(config.Misc.ApiKeys) == 0 {
 		id, _ := uuid.NewV4()
-		config.Misc.ApiKey = id.String()
+		config.Misc.ApiKeys = append(config.Misc.ApiKeys, id.String())
 	}
 	logger.Info("Done initalizing configuration")
 	return nil
