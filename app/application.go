@@ -21,6 +21,7 @@ import (
 	"github.com/johannes-kuhfuss/services_utils/date"
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -155,6 +156,7 @@ func mapUrls() {
 		ui.GET("/config", jobUiHandler.ConfigPage)
 		ui.GET("/about", jobUiHandler.AboutPage)
 	}
+	cfg.RunTime.Router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 }
 
 func RegisterForOsSignals() {
