@@ -48,6 +48,7 @@ func StartApp() {
 	initRouter()
 	initServer()
 	initDb()
+	initMetrics()
 	wireApp()
 	mapUrls()
 	RegisterForOsSignals()
@@ -129,6 +130,10 @@ func initDb() {
 	logger.Info("Successfully connected to database")
 }
 
+func initMetrics() {
+	prometheusRegister()
+}
+
 func wireApp() {
 	jobRepo = repositories.NewJobRepositoryDb(&cfg)
 	jobService = service.NewJobService(jobRepo)
@@ -137,7 +142,7 @@ func wireApp() {
 }
 
 func mapUrls() {
-	api := cfg.RunTime.Router.Group("/jobs", validateAuth())
+	api := cfg.RunTime.Router.Group("/jobs", validateAuth(), prometheusMetrics())
 	{
 		api.POST("/", jobHandler.CreateJob)
 		api.GET("/", jobHandler.GetAllJobs)
