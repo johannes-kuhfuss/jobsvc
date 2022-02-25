@@ -269,10 +269,12 @@ func (jrd JobRepositoryDb) DeleteAllJobs() api_error.ApiErr {
 	return nil
 }
 
-func (jrd JobRepositoryDb) CleanupJobs(FailedRetentionDays int, SuccessRetentionDays int) api_error.ApiErr {
+func (jrd JobRepositoryDb) CleanupJobs() api_error.ApiErr {
+	var inProgressRows int
 	conn := jrd.cfg.RunTime.DbConn
+
 	sqlDeleteFailed := fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table)
-	searchTime := time.Now().UTC().Add(-time.Hour * 24 * time.Duration(FailedRetentionDays))
+	searchTime := time.Now().UTC().Add(-time.Hour * 24 * time.Duration(jrd.cfg.Cleanup.FailedRetentionDays))
 	sqlRes, sqlErr := conn.Exec(sqlDeleteFailed, searchTime)
 	if sqlErr != nil {
 		msg := "Database error deleting expired failed jobs"
@@ -281,8 +283,9 @@ func (jrd JobRepositoryDb) CleanupJobs(FailedRetentionDays int, SuccessRetention
 	}
 	failedRows, _ := sqlRes.RowsAffected()
 	logger.Info(fmt.Sprintf("Deleted %d expired failed jobs", failedRows))
+
 	sqlDeleteSucceeded := fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table)
-	searchTime = time.Now().UTC().Add(-time.Hour * 24 * time.Duration(SuccessRetentionDays))
+	searchTime = time.Now().UTC().Add(-time.Hour * 24 * time.Duration(jrd.cfg.Cleanup.SuccessRetentionDays))
 	sqlRes, sqlErr = conn.Exec(sqlDeleteSucceeded, searchTime)
 	if sqlErr != nil {
 		msg := "Database error deleting expired succeeded jobs"
@@ -291,5 +294,14 @@ func (jrd JobRepositoryDb) CleanupJobs(FailedRetentionDays int, SuccessRetention
 	}
 	successRows, _ := sqlRes.RowsAffected()
 	logger.Info(fmt.Sprintf("Deleted %d expired succeeded jobs", successRows))
+
+	sqlCountRunning := fmt.Sprintf("SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1", table)
+	searchTime = time.Now().UTC().Add(-time.Hour * time.Duration(jrd.cfg.Cleanup.InProgressWarningHours))
+	row := conn.QueryRow(sqlCountRunning, searchTime)
+	row.Scan(&inProgressRows)
+	if inProgressRows > 0 {
+		logger.Warn(fmt.Sprintf("Found %d jobs in progress longer than %d hours", inProgressRows, jrd.cfg.Cleanup.InProgressWarningHours))
+	}
+
 	return nil
 }

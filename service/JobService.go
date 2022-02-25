@@ -143,9 +143,7 @@ func (s DefaultJobService) DeleteAllJobs() api_error.ApiErr {
 }
 
 func (s DefaultJobService) CleanJobs() api_error.ApiErr {
-	failRetDays := s.Cfg.Cleanup.FailedRetentionDays
-	successRetDays := s.Cfg.Cleanup.SuccessRetentionDays
-	err := s.repo.CleanupJobs(failRetDays, successRetDays)
+	err := s.repo.CleanupJobs()
 	if err != nil {
 		return err
 	}
