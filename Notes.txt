@@ -1,7 +1,9 @@
+UiHandler Unit tests
+JobRepo Unit Test for Cleanup
+jobservice unit tests for cleanup
 Web Sockets to update UI
 Integration tests
 Performance tests (+ large DB size)
 CSRF protection
 Let user choose return values
 Move (business) logic from Repo to service?
-Cleanup: https://github.com/robfig/cron
