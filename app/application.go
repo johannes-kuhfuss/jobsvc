@@ -185,7 +185,7 @@ func createSanitizers() {
 func scheduleBgJobs() {
 	bgJobs = cron.New()
 	cleanJobcycle := fmt.Sprintf("@every %dh", cfg.Cleanup.CycleHours)
-	bgJobs.AddFunc(cleanJobcycle, cleanJobs)
+	bgJobs.AddJob(cleanJobcycle, cron.NewChain(cron.DelayIfStillRunning(cron.DefaultLogger)).Then(&cleanJobs{}))
 	bgJobs.Start()
 }
 

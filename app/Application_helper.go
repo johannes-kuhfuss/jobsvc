@@ -13,7 +13,9 @@ func formatAsDate(t time.Time) string {
 	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minute, second)
 }
 
-func cleanJobs() {
+type cleanJobs struct{}
+
+func (c cleanJobs) Run() {
 	err := jobService.CleanJobs()
 	if err != nil {
 		logger.Error("Error while cleaning jobs from database", nil)
