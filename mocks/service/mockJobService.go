@@ -35,6 +35,20 @@ func (m *MockJobService) EXPECT() *MockJobServiceMockRecorder {
 	return m.recorder
 }
 
+// CleanJobs mocks base method.
+func (m *MockJobService) CleanJobs() api_error.ApiErr {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanJobs")
+	ret0, _ := ret[0].(api_error.ApiErr)
+	return ret0
+}
+
+// CleanJobs indicates an expected call of CleanJobs.
+func (mr *MockJobServiceMockRecorder) CleanJobs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanJobs", reflect.TypeOf((*MockJobService)(nil).CleanJobs))
+}
+
 // CreateJob mocks base method.
 func (m *MockJobService) CreateJob(arg0 dto.CreateUpdateJobRequest) (*dto.JobResponse, api_error.ApiErr) {
 	m.ctrl.T.Helper()

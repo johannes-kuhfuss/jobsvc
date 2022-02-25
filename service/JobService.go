@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/johannes-kuhfuss/jobsvc/config"
 	"github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/services_utils/api_error"
@@ -20,14 +21,19 @@ type JobService interface {
 	SetStatusById(string, dto.UpdateJobStatusRequest) api_error.ApiErr
 	SetHistoryById(string, dto.UpdateJobHistoryRequest) api_error.ApiErr
 	DeleteAllJobs() api_error.ApiErr
+	CleanJobs() api_error.ApiErr
 }
 
 type DefaultJobService struct {
 	repo domain.JobRepository
+	Cfg  *config.AppConfig
 }
 
-func NewJobService(repository domain.JobRepository) DefaultJobService {
-	return DefaultJobService{repository}
+func NewJobService(cfg *config.AppConfig, repository domain.JobRepository) DefaultJobService {
+	return DefaultJobService{
+		repo: repository,
+		Cfg:  cfg,
+	}
 }
 
 func (s DefaultJobService) GetAllJobs(safReq dto.SortAndFilterRequest) (*[]dto.JobResponse, int, api_error.ApiErr) {
@@ -130,6 +136,16 @@ func (s DefaultJobService) SetHistoryById(id string, historyReq dto.UpdateJobHis
 
 func (s DefaultJobService) DeleteAllJobs() api_error.ApiErr {
 	err := s.repo.DeleteAllJobs()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s DefaultJobService) CleanJobs() api_error.ApiErr {
+	failRetDays := s.Cfg.Cleanup.FailedRetentionDays
+	successRetDays := s.Cfg.Cleanup.SuccessRetentionDays
+	err := s.repo.CleanupJobs(failRetDays, successRetDays)
 	if err != nil {
 		return err
 	}

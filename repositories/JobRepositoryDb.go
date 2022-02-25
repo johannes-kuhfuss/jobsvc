@@ -267,3 +267,8 @@ func (jrd JobRepositoryDb) DeleteAllJobs() api_error.ApiErr {
 	}
 	return nil
 }
+
+func (jrd JobRepositoryDb) CleanupJobs(FailedRetentionDays int, SuccessRetentionDays int) api_error.ApiErr {
+	logger.Info("Clean jobs invoked")
+	return nil
+}

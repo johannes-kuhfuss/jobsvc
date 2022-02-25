@@ -39,6 +39,11 @@ type AppConfig struct {
 		MaxResultLimit int      `envconfig:"MAX_RESULT_LIMIT" default:"100"`
 		ApiKeys        []string `envconfig:"API_KEYS"`
 	}
+	Cleanup struct {
+		CycleHours           int `envconfig:"CLEANUP_CYCLE_HOURS" default:"1"`
+		FailedRetentionDays  int `envconfig:"CLEANUP_FAILED_RETEN_DAYS" default:"2"`
+		SuccessRetentionDays int `envconfig:"CLEANUP_SUCCESS_RETEN_DAYS" default:"1"`
+	}
 	RunTime struct {
 		Router     *gin.Engine
 		DbConn     *sqlx.DB

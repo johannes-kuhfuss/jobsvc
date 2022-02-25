@@ -45,6 +45,7 @@ type JobRepository interface {
 	SetStatusById(string, string, string) api_error.ApiErr
 	SetHistoryById(string, string) api_error.ApiErr
 	DeleteAllJobs() api_error.ApiErr
+	CleanupJobs(int, int) api_error.ApiErr
 }
 
 func NewJob(jobName string, jobType string) (*Job, api_error.ApiErr) {

@@ -22,6 +22,7 @@ import (
 	"github.com/johannes-kuhfuss/services_utils/logger"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/robfig/cron/v3"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -37,6 +38,7 @@ var (
 	ctx          context.Context
 	cancel       context.CancelFunc
 	jobUiHandler handler.JobUiHandler
+	bgJobs       *cron.Cron
 )
 
 func StartApp() {
@@ -53,6 +55,7 @@ func StartApp() {
 	mapUrls()
 	RegisterForOsSignals()
 	createSanitizers()
+	scheduleBgJobs()
 	go startServer()
 
 	<-appEnd
@@ -136,7 +139,7 @@ func initMetrics() {
 
 func wireApp() {
 	jobRepo = repositories.NewJobRepositoryDb(&cfg)
-	jobService = service.NewJobService(jobRepo)
+	jobService = service.NewJobService(&cfg, jobRepo)
 	jobHandler = handler.NewJobHandler(&cfg, jobService)
 	jobUiHandler = handler.NewJobUiHandler(&cfg, jobService)
 }
@@ -179,6 +182,13 @@ func createSanitizers() {
 	cfg.RunTime.BmPolicy = bluemonday.UGCPolicy()
 }
 
+func scheduleBgJobs() {
+	bgJobs = cron.New()
+	cleanJobcycle := fmt.Sprintf("@every %dh", cfg.Cleanup.CycleHours)
+	bgJobs.AddFunc(cleanJobcycle, cleanJobs)
+	bgJobs.Start()
+}
+
 func startServer() {
 	logger.Info(fmt.Sprintf("Listening on %v", cfg.RunTime.ListenAddr))
 	cfg.RunTime.StartDate = date.GetNowUtc()
@@ -200,6 +210,7 @@ func cleanUp() {
 	ctx, cancel = context.WithTimeout(context.Background(), shutdownTime)
 	defer func() {
 		logger.Info("Cleaning up")
+		bgJobs.Stop()
 		cfg.RunTime.DbConn.Close()
 		logger.Info("Done cleaning up")
 		cancel()

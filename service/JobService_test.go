@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/johannes-kuhfuss/jobsvc/config"
 	realdomain "github.com/johannes-kuhfuss/jobsvc/domain"
 	"github.com/johannes-kuhfuss/jobsvc/dto"
 	"github.com/johannes-kuhfuss/jobsvc/mocks/domain"
@@ -18,12 +19,13 @@ var (
 	jobCtrl     *gomock.Controller
 	mockJobRepo *domain.MockJobRepository
 	jobService  JobService
+	cfg         config.AppConfig
 )
 
 func setupJob(t *testing.T) func() {
 	jobCtrl = gomock.NewController(t)
 	mockJobRepo = domain.NewMockJobRepository(jobCtrl)
-	jobService = NewJobService(mockJobRepo)
+	jobService = NewJobService(&cfg, mockJobRepo)
 	return func() {
 		jobService = nil
 		jobCtrl.Finish()

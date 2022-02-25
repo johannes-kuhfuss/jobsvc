@@ -3,6 +3,8 @@ package app
 import (
 	"fmt"
 	"time"
+
+	"github.com/johannes-kuhfuss/services_utils/logger"
 )
 
 func formatAsDate(t time.Time) string {
@@ -11,3 +13,9 @@ func formatAsDate(t time.Time) string {
 	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minute, second)
 }
 
+func cleanJobs() {
+	err := jobService.CleanJobs()
+	if err != nil {
+		logger.Error("Error while cleaning jobs from database", nil)
+	}
+}
