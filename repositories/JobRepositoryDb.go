@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/johannes-kuhfuss/jobsvc/config"
@@ -269,6 +270,26 @@ func (jrd JobRepositoryDb) DeleteAllJobs() api_error.ApiErr {
 }
 
 func (jrd JobRepositoryDb) CleanupJobs(FailedRetentionDays int, SuccessRetentionDays int) api_error.ApiErr {
-	logger.Info("Clean jobs invoked")
+	conn := jrd.cfg.RunTime.DbConn
+	sqlDeleteFailed := fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table)
+	searchTime := time.Now().UTC().Add(-time.Hour * 24 * time.Duration(FailedRetentionDays))
+	sqlRes, sqlErr := conn.Exec(sqlDeleteFailed, searchTime)
+	if sqlErr != nil {
+		msg := "Database error deleting expired failed jobs"
+		logger.Error(msg, sqlErr)
+		return api_error.NewInternalServerError(msg, nil)
+	}
+	failedRows, _ := sqlRes.RowsAffected()
+	logger.Info(fmt.Sprintf("Deleted %d expired failed jobs", failedRows))
+	sqlDeleteSucceeded := fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table)
+	searchTime = time.Now().UTC().Add(-time.Hour * 24 * time.Duration(SuccessRetentionDays))
+	sqlRes, sqlErr = conn.Exec(sqlDeleteSucceeded, searchTime)
+	if sqlErr != nil {
+		msg := "Database error deleting expired succeeded jobs"
+		logger.Error(msg, sqlErr)
+		return api_error.NewInternalServerError(msg, nil)
+	}
+	successRows, _ := sqlRes.RowsAffected()
+	logger.Info(fmt.Sprintf("Deleted %d expired succeeded jobs", successRows))
 	return nil
 }
