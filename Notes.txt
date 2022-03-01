@@ -1,6 +1,6 @@
-UiHandler Unit tests
 JobRepo Unit Test for Cleanup
 jobservice unit tests for cleanup
+Migrate DB creation to Soda: https://github.com/gobuffalo/pop
 Web Sockets to update UI
 Integration tests
 Performance tests (+ large DB size)
