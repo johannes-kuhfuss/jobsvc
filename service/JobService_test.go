@@ -419,3 +419,26 @@ func Test_DeleteAllJobs_Returns_NoError(t *testing.T) {
 
 	assert.Nil(t, err)
 }
+
+func Test_CleanJobs_Returns_InternalServerError(t *testing.T) {
+	teardown := setupJob(t)
+	defer teardown()
+	apiError := api_error.NewInternalServerError("Database error", nil)
+	mockJobRepo.EXPECT().CleanupJobs().Return(apiError)
+
+	err := jobService.CleanJobs()
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, apiError.Message(), err.Message())
+	assert.EqualValues(t, apiError.StatusCode(), err.StatusCode())
+}
+
+func Test_CleanJobs_Returns_NoError(t *testing.T) {
+	teardown := setupJob(t)
+	defer teardown()
+	mockJobRepo.EXPECT().CleanupJobs().Return(nil)
+
+	err := jobService.CleanJobs()
+
+	assert.Nil(t, err)
+}
