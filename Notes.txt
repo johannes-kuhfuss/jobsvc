@@ -1,5 +1,5 @@
-JobRepo Unit Test for Cleanup
 Migrate DB creation to Soda: https://github.com/gobuffalo/pop
+Indices for DB?
 Web Sockets to update UI
 Integration tests
 Performance tests (+ large DB size)

@@ -298,7 +298,14 @@ func (jrd JobRepositoryDb) CleanupJobs() api_error.ApiErr {
 	sqlCountRunning := fmt.Sprintf("SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1", table)
 	searchTime = time.Now().UTC().Add(-time.Hour * time.Duration(jrd.cfg.Cleanup.InProgressWarningHours))
 	row := conn.QueryRow(sqlCountRunning, searchTime)
-	row.Scan(&inProgressRows)
+	sqlErr = row.Scan(&inProgressRows)
+	if sqlErr != nil {
+		if sqlErr != sql.ErrNoRows {
+			msg := "Database error checking for stale in-progress jobs"
+			logger.Error(msg, sqlErr)
+			return api_error.NewInternalServerError(msg, nil)
+		}
+	}
 	if inProgressRows > 0 {
 		logger.Warn(fmt.Sprintf("Found %d jobs in progress longer than %d hours", inProgressRows, jrd.cfg.Cleanup.InProgressWarningHours))
 	}

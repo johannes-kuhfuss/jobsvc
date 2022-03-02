@@ -809,3 +809,67 @@ func Test_DeleteAllJobs_NoError_Returns_NoError(t *testing.T) {
 
 	assert.Nil(t, err)
 }
+
+func Test_CleanupJobs_FailedDeleteFailed_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	sqlError := sql.ErrConnDone
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnError(sqlError)
+
+	err := jrd.CleanupJobs()
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error deleting expired failed jobs", err.Message())
+}
+
+func Test_CleanupJobs_SucceededDeleteFailed_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	sqlError := sql.ErrConnDone
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnError(sqlError)
+
+	err := jrd.CleanupJobs()
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error deleting expired succeeded jobs", err.Message())
+}
+
+func Test_CleanupJobs_InProgressFailed_Returns_InternalServerError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	sqlError := sql.ErrConnDone
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnError(sqlError)
+
+	err := jrd.CleanupJobs()
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error checking for stale in-progress jobs", err.Message())
+}
+
+func Test_CleanupJobs_NoError_Returns_NoError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1", table))).
+		WithArgs(AnyTime{}).WillReturnRows(countRows)
+
+	err := jrd.CleanupJobs()
+
+	assert.Nil(t, err)
+}
