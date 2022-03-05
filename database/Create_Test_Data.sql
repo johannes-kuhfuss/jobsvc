@@ -16,6 +16,6 @@ concat('Action Details - ', md5(RANDOM()::TEXT)),
 floor(random() * 101)::int,
 concat('History - ', md5(RANDOM()::TEXT), md5(RANDOM()::TEXT), md5(RANDOM()::TEXT), md5(RANDOM()::TEXT)),
 concat('Extra Data - ', md5(RANDOM()::TEXT), md5(RANDOM()::TEXT), md5(RANDOM()::TEXT), md5(RANDOM()::TEXT)),
-floor(random() * 5)::int,
+(array[10, 20, 30, 40, 50])[floor(random() * 5+1)]::int,
 floor(random() * 1501)::int
 end from pg_catalog.generate_series(1,100);
