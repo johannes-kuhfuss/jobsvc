@@ -1,4 +1,4 @@
-Migrate DB creation to Soda: https://github.com/gobuffalo/pop
+Adjust test data script to use correct prio int values
 Indices for DB?
 Web Sockets to update UI
 Integration tests

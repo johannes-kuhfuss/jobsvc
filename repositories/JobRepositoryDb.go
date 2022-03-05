@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -41,11 +42,13 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 	if where == "" {
 		findAllSql = fmt.Sprintf("SELECT * FROM %v ORDER BY %v LIMIT $1 OFFSET $2", table, orderBy)
 		err = conn.Select(&jobs, findAllSql, safReq.Limit, safReq.Offset)
-		countSql = fmt.Sprintf("SELECT count(*) FROM %v", table)
+		countSql = fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v')", table)
 	} else {
 		findAllSql = fmt.Sprintf("SELECT * FROM %v WHERE %v ORDER BY %v LIMIT $1 OFFSET $2", table, where, orderBy)
 		err = conn.Select(&jobs, findAllSql, safReq.Limit, safReq.Offset)
-		countSql = fmt.Sprintf("SELECT count(*) FROM %v WHERE %v", table, where)
+		countWhere := strings.ReplaceAll(where, "'", "$$")
+		countSql = fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v WHERE %v')", table, countWhere)
+		logger.Info(countSql)
 	}
 	if err != nil {
 		msg := "Database error getting all jobs"
@@ -58,7 +61,12 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 		return nil, 0, api_error.NewNotFoundError(msg)
 	}
 	row := conn.QueryRow(countSql)
-	row.Scan(&totalCount)
+	err = row.Scan(&totalCount)
+	if err != nil {
+		msg := "Database error getting count"
+		logger.Error(msg, err)
+		return nil, 0, api_error.NewInternalServerError(msg, nil)
+	}
 	return &jobs, totalCount, nil
 }
 

@@ -103,6 +103,33 @@ func Test_FindAll_NoWhereNoResults_Returns_NotFoundError(t *testing.T) {
 	assert.EqualValues(t, "No jobs found", err.Message())
 }
 
+func Test_FindAll_NoWhere_Returns_CountError(t *testing.T) {
+	teardown := setupTest(t)
+	defer teardown()
+
+	safReq := dto.SortAndFilterRequest{
+		Sorts: dto.SortBy{
+			Field: "id",
+			Dir:   "DESC",
+		},
+	}
+	now := date.GetNowUtc()
+	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
+		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
+		WillReturnRows(rows)
+	sqlErr := sql.ErrConnDone
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v')", table))).WillReturnError(sqlErr)
+
+	jobs, totalCount, err := jrd.FindAll(safReq)
+
+	assert.Nil(t, jobs)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, 0, totalCount)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode())
+	assert.EqualValues(t, "Database error getting count", err.Message())
+}
+
 func Test_FindAll_NoWhere_Returns_Results(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
@@ -119,7 +146,7 @@ func Test_FindAll_NoWhere_Returns_Results(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v", table))).WillReturnRows(countRows)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v')", table))).WillReturnRows(countRows)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
 
@@ -148,7 +175,8 @@ func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = 'running' ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v", table))).WillReturnRows(countRows)
+	countWhere := "status = $$running$$"
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v WHERE %v')", table, countWhere))).WillReturnRows(countRows)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
 
