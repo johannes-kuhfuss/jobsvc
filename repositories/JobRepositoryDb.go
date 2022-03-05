@@ -48,7 +48,6 @@ func (jrd JobRepositoryDb) FindAll(safReq dto.SortAndFilterRequest) (*[]domain.J
 		err = conn.Select(&jobs, findAllSql, safReq.Limit, safReq.Offset)
 		countWhere := strings.ReplaceAll(where, "'", "$$")
 		countSql = fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v WHERE %v')", table, countWhere)
-		logger.Info(countSql)
 	}
 	if err != nil {
 		msg := "Database error getting all jobs"
