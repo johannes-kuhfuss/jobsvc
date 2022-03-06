@@ -129,6 +129,11 @@ func initDb() {
 		logger.Error(fmt.Sprintf("Could not connect to database at %v:%v", cfg.Db.Host, cfg.Db.Port), err)
 		panic(err)
 	}
+	err = conn.Ping()
+	if err != nil {
+		logger.Error("Could not ping database", err)
+		panic(err)
+	}
 	cfg.RunTime.DbConn = conn
 	logger.Info("Successfully connected to database")
 }
