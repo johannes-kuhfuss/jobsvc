@@ -68,7 +68,7 @@ func Test_FindAll_NoWhere_Returns_DbError(t *testing.T) {
 		},
 	}
 	sqlErr := sql.ErrConnDone
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v ORDER BY %v %v`, table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnError(sqlErr)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
@@ -91,7 +91,7 @@ func Test_FindAll_NoWhereNoResults_Returns_NotFoundError(t *testing.T) {
 		},
 	}
 	rows := sqlmock.NewRows([]string{})
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v ORDER BY %v %v`, table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
@@ -114,12 +114,49 @@ func Test_FindAll_NoWhere_Returns_CountError(t *testing.T) {
 		},
 	}
 	now := date.GetNowUtc()
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name",
+		"created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status", "source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			"23GaSImHjnOuKwdxYGP9fY8KmPC",
+			"Corr Id 1",
+			"Job 1",
+			now,
+			"me",
+			now,
+			"you",
+			"running",
+			"source 1",
+			"destination 1",
+			"encoding",
+			"subtype 1",
+			"action 1",
+			"action details 1",
+			0,
+			"2022-01-05T06:07:55Z: Job created\n",
+			"no extra data 1",
+			20,
+			0)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v ORDER BY %v %v`, table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 	sqlErr := sql.ErrConnDone
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v')", table))).WillReturnError(sqlErr)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT count_estimate('SELECT 1 FROM %v')`, table))).WillReturnError(sqlErr)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
 
@@ -141,12 +178,49 @@ func Test_FindAll_NoWhere_Returns_Results(t *testing.T) {
 		},
 	}
 	now := date.GetNowUtc()
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name",
+		"created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status", "source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			"23GaSImHjnOuKwdxYGP9fY8KmPC",
+			"Corr Id 1",
+			"Job 1",
+			now,
+			"me",
+			now,
+			"you",
+			"running",
+			"source 1",
+			"destination 1",
+			"encoding",
+			"subtype 1",
+			"action 1",
+			"action details 1",
+			0,
+			"2022-01-05T06:07:55Z: Job created\n",
+			"no extra data 1",
+			20,
+			0)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v ORDER BY %v %v`, table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v')", table))).WillReturnRows(countRows)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT count_estimate('SELECT 1 FROM %v')`, table))).WillReturnRows(countRows)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
 
@@ -170,13 +244,50 @@ func Test_FindAll_WithWhere_Returns_Results(t *testing.T) {
 		Offset: 0,
 	}
 	now := date.GetNowUtc()
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow("23GaSImHjnOuKwdxYGP9fY8KmPC", "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = 'running' ORDER BY %v %v", table, safReq.Sorts.Field, safReq.Sorts.Dir))).
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name",
+		"created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status", "source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			"23GaSImHjnOuKwdxYGP9fY8KmPC",
+			"Corr Id 1",
+			"Job 1",
+			now,
+			"me",
+			now,
+			"you",
+			"running",
+			"source 1",
+			"destination 1",
+			"encoding",
+			"subtype 1",
+			"action 1",
+			"action details 1",
+			0,
+			"2022-01-05T06:07:55Z: Job created\n",
+			"no extra data 1",
+			20,
+			0)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE status = 'running' ORDER BY %v %v`, table, safReq.Sorts.Field, safReq.Sorts.Dir))).
 		WillReturnRows(rows)
 	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
 	countWhere := "status = $$running$$"
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count_estimate('SELECT 1 FROM %v WHERE %v')", table, countWhere))).WillReturnRows(countRows)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT count_estimate('SELECT 1 FROM %v WHERE %v')`, table, countWhere))).WillReturnRows(countRows)
 
 	jobs, totalCount, err := jrd.FindAll(safReq)
 
@@ -190,7 +301,7 @@ func Test_FindById_DbError_Returns_InternalServerError(t *testing.T) {
 	defer teardown()
 
 	sqlErr := sql.ErrConnDone
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs("23GaSImHjnOuKwdxYGP9fY8KmPC").WillReturnError(sqlErr)
 
 	job, err := jrd.FindById("23GaSImHjnOuKwdxYGP9fY8KmPC")
@@ -207,7 +318,7 @@ func Test_FindById_NoResult_Returns_NotFoundError(t *testing.T) {
 
 	id := "23GaSImHjnOuKwdxYGP9fY8KmPC"
 	sqlErr := sql.ErrNoRows
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnError(sqlErr)
 
 	job, err := jrd.FindById(id)
@@ -224,9 +335,47 @@ func Test_FindById_NoError_Returns_Result(t *testing.T) {
 
 	id := "23GaSImHjnOuKwdxYGP9fY8KmPC"
 	now := date.GetNowUtc()
-	row := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow(id, "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+	row := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name",
+		"created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status",
+		"source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			id,
+			"Corr Id 1",
+			"Job 1",
+			now,
+			"me",
+			now,
+			"you",
+			"running",
+			"source 1",
+			"destination 1",
+			"encoding",
+			"subtype 1",
+			"action 1",
+			"action details 1",
+			0,
+			"2022-01-05T06:07:55Z: Job created\n",
+			"no extra data 1",
+			20,
+			0)
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnRows(row)
 
 	job, err := jrd.FindById(id)
@@ -242,8 +391,46 @@ func Test_Store_DbError_Returns_InternalServerError(t *testing.T) {
 
 	sqlErr := sql.ErrConnDone
 	job, _ := domain.NewJob("Job 1", "Encoding")
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("INSERT INTO %v (id, correlation_id, name, created_at, created_by, modified_at, modified_by, status, source, destination, type, sub_type, action, action_details, progress, history, extra_data, priority, rank) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)", table))).
-		WithArgs(job.Id.String(), job.CorrelationId, job.Name, job.CreatedAt, job.CreatedBy, job.ModifiedAt, job.ModifiedBy, job.Status, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.Progress, job.History, job.ExtraData, job.Priority, job.Rank).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`INSERT INTO %v (
+		id, 
+		correlation_id, 
+		name, 
+		created_at, 
+		created_by, 
+		modified_at, 
+		modified_by, 
+		status, source, 
+		destination, 
+		type, 
+		sub_type, 
+		action, 
+		action_details, 
+		progress, 
+		history, 
+		extra_data, 
+		priority, 
+		rank) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`, table))).
+		WithArgs(
+			job.Id.String(),
+			job.CorrelationId,
+			job.Name,
+			job.CreatedAt,
+			job.CreatedBy,
+			job.ModifiedAt,
+			job.ModifiedBy,
+			job.Status,
+			job.Source,
+			job.Destination,
+			job.Type,
+			job.SubType,
+			job.Action,
+			job.ActionDetails,
+			job.Progress,
+			job.History,
+			job.ExtraData,
+			job.Priority,
+			job.Rank).
 		WillReturnError(sqlErr)
 
 	err := jrd.Store(*job)
@@ -258,8 +445,47 @@ func Test_Store_NoError_Returns_NoError(t *testing.T) {
 	defer teardown()
 
 	job, _ := domain.NewJob("Job 1", "Encoding")
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("INSERT INTO %v (id, correlation_id, name, created_at, created_by, modified_at, modified_by, status, source, destination, type, sub_type, action, action_details, progress, history, extra_data, priority, rank) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)", table))).
-		WithArgs(job.Id.String(), job.CorrelationId, job.Name, job.CreatedAt, job.CreatedBy, job.ModifiedAt, job.ModifiedBy, job.Status, job.Source, job.Destination, job.Type, job.SubType, job.Action, job.ActionDetails, job.Progress, job.History, job.ExtraData, job.Priority, job.Rank).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`INSERT INTO %v (
+		id, 
+		correlation_id, 
+		name, 
+		created_at, 
+		created_by, 
+		modified_at, 
+		modified_by, 
+		status, 
+		source, 
+		destination, 
+		type, 
+		sub_type, 
+		action, 
+		action_details, 
+		progress, 
+		history, 
+		extra_data, 
+		priority, 
+		rank) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`, table))).
+		WithArgs(
+			job.Id.String(),
+			job.CorrelationId,
+			job.Name,
+			job.CreatedAt,
+			job.CreatedBy,
+			job.ModifiedAt,
+			job.ModifiedBy,
+			job.Status,
+			job.Source,
+			job.Destination,
+			job.Type,
+			job.SubType,
+			job.Action,
+			job.ActionDetails,
+			job.Progress,
+			job.History,
+			job.ExtraData,
+			job.Priority,
+			job.Rank).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := jrd.Store(*job)
@@ -273,7 +499,7 @@ func Test_DeleteById_DbError_Returns_InternalServerError(t *testing.T) {
 
 	sqlErr := sql.ErrConnDone
 	id := ksuid.New()
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE id = $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE id = $1`, table))).
 		WithArgs(id.String()).WillReturnError(sqlErr)
 
 	err := jrd.DeleteById(id.String())
@@ -288,7 +514,7 @@ func Test_DeleteById_NoError_Returns_NoError(t *testing.T) {
 	defer teardown()
 
 	id := ksuid.New()
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE id = $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE id = $1`, table))).
 		WithArgs(id.String()).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := jrd.DeleteById(id.String())
@@ -318,7 +544,7 @@ func Test_Dequeue_NoJobForType_Returns_NotFoundError(t *testing.T) {
 	jobType := "encoding"
 	sqlErr := sql.ErrNoRows
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1`, table))).
 		WithArgs(string(domain.StatusCreated), jobType).WillReturnError(sqlErr)
 
 	job, err := jrd.Dequeue(jobType)
@@ -336,7 +562,7 @@ func Test_Dequeue_DbSelectError_Returns_InternalServerError(t *testing.T) {
 	jobType := "encoding"
 	sqlErr := sql.ErrConnDone
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1`, table))).
 		WithArgs(string(domain.StatusCreated), jobType).WillReturnError(sqlErr)
 
 	job, err := jrd.Dequeue(jobType)
@@ -355,12 +581,49 @@ func Test_Dequeue_DbUpdateError_Returns_InternalServerError(t *testing.T) {
 	sqlErr := sql.ErrConnDone
 	now := date.GetNowUtc()
 	id := "23GaSImHjnOuKwdxYGP9fY8KmPC"
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow(id, "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name", "created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status",
+		"source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			id,
+			"Corr Id 1",
+			"Job 1",
+			now,
+			"me",
+			now,
+			"you",
+			"running",
+			"source 1",
+			"destination 1",
+			"encoding",
+			"subtype 1",
+			"action 1",
+			"action details 1",
+			0,
+			"2022-01-05T06:07:55Z: Job created\n",
+			"no extra data 1",
+			20,
+			0)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1`, table))).
 		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4`, table))).
 		WithArgs(AnyTime{}, "running", AnyString{}, id).WillReturnError(sqlErr)
 
 	job, err := jrd.Dequeue(jobType)
@@ -379,12 +642,49 @@ func Test_Dequeue_TransactionCommitError_Returns_InternalServerError(t *testing.
 	sqlErr := sql.ErrTxDone
 	now := date.GetNowUtc()
 	id := "23GaSImHjnOuKwdxYGP9fY8KmPC"
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow(id, "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name", "created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status",
+		"source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			id,
+			"Corr Id 1",
+			"Job 1",
+			now,
+			"me",
+			now,
+			"you",
+			"running",
+			"source 1",
+			"destination 1",
+			"encoding",
+			"subtype 1",
+			"action 1",
+			"action details 1",
+			0,
+			"2022-01-05T06:07:55Z: Job created\n",
+			"no extra data 1",
+			20,
+			0)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1`, table))).
 		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history, progress) = ($1, $2, $3, $4) WHERE id = $5", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, status, history, progress) = ($1, $2, $3, $4) WHERE id = $5`, table))).
 		WithArgs(AnyTime{}, "running", AnyString{}, 1, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit().WillReturnError(sqlErr)
 
@@ -403,12 +703,49 @@ func Test_Dequeue_NoError_Returns_Job(t *testing.T) {
 	jobType := "encoding"
 	now := date.GetNowUtc()
 	id := "23GaSImHjnOuKwdxYGP9fY8KmPC"
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow(id, "Corr Id 1", "Job 1", now, "me", now, "you", "running", "source 1", "destination 1", "encoding", "subtype 1", "action 1", "action details 1", 0, "2022-01-05T06:07:55Z: Job created\n", "no extra data 1", 2, 0)
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name", "created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status",
+		"source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			id,
+			"Corr Id 1",
+			"Job 1",
+			now,
+			"me",
+			now,
+			"you",
+			"running",
+			"source 1",
+			"destination 1",
+			"encoding",
+			"subtype 1",
+			"action 1",
+			"action details 1",
+			0,
+			"2022-01-05T06:07:55Z: Job created\n",
+			"no extra data 1",
+			20,
+			0)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE status = $1 AND type = $2 ORDER BY priority ASC, rank DESC limit 1`, table))).
 		WithArgs(string(domain.StatusCreated), jobType).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history, progress) = ($1, $2, $3, $4) WHERE id = $5", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, status, history, progress) = ($1, $2, $3, $4) WHERE id = $5`, table))).
 		WithArgs(AnyTime{}, "running", AnyString{}, 1, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
@@ -445,7 +782,7 @@ func Test_SetStatusById_DbSelectError_Returns_InternalServerError(t *testing.T) 
 	newStatus := "failed"
 	message := "Job History Updated"
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT status, history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT status, history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnError(sqlErr)
 
 	err := jrd.SetStatusById(id, newStatus, message)
@@ -466,10 +803,10 @@ func Test_SetStatusById_DbUpdateError_Returns_InternalServerError(t *testing.T) 
 	rows := sqlmock.NewRows([]string{"status", "history"}).
 		AddRow("running", "2022-01-05T06:07:55Z: Job created\n")
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT status, history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT status, history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnRows(rows)
 
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4`, table))).
 		WithArgs(AnyTime{}, newStatus, AnyString{}, id).WillReturnError(sqlErr)
 
 	err := jrd.SetStatusById(id, newStatus, message)
@@ -490,10 +827,10 @@ func Test_SetStatusById_TransactionCommitError_Returns_InternalServerError(t *te
 	rows := sqlmock.NewRows([]string{"status", "history"}).
 		AddRow("running", "2022-01-05T06:07:55Z: Job created\n")
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT status, history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT status, history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnRows(rows)
 
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4`, table))).
 		WithArgs(AnyTime{}, newStatus, AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit().WillReturnError(sqlErr)
 
@@ -514,10 +851,10 @@ func Test_SetStatusById_NoError_Returns_NoError(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"status", "history"}).
 		AddRow("running", "2022-01-05T06:07:55Z: Job created\n")
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT status, history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT status, history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnRows(rows)
 
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, status, history) = ($1, $2, $3) WHERE id = $4`, table))).
 		WithArgs(AnyTime{}, newStatus, AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
@@ -555,7 +892,7 @@ func Test_Update_DbSelectError_Returns_InternalServerError(t *testing.T) {
 		SubType: "sub type",
 	}
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnError(sqlErr)
 
 	job, err := jrd.Update(id, jobUpdReq)
@@ -600,9 +937,9 @@ func Test_Update_DbUpdateError_Returns_InternalServerError(t *testing.T) {
 		AddRow(oldJob.Id.String(), oldJob.CorrelationId, oldJob.Name, oldJob.CreatedAt, oldJob.CreatedBy, oldJob.ModifiedAt, oldJob.ModifiedBy, oldJob.Status, oldJob.Source, oldJob.Destination, oldJob.Type, oldJob.SubType, oldJob.Action, oldJob.ActionDetails, oldJob.Progress, oldJob.History, oldJob.ExtraData, oldJob.Priority, oldJob.Rank)
 	mergedJob := mergeJobs(&oldJob, jobUpdReq)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs(oldJob.Id.String()).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15`, table))).
 		WithArgs(mergedJob.CorrelationId, mergedJob.Name, AnyTime{}, mergedJob.ModifiedBy, mergedJob.Source, mergedJob.Destination, mergedJob.Type, mergedJob.SubType, mergedJob.Action, mergedJob.ActionDetails, mergedJob.History, mergedJob.ExtraData, mergedJob.Priority, mergedJob.Rank, oldJob.Id.String()).
 		WillReturnError(sqlErr)
 
