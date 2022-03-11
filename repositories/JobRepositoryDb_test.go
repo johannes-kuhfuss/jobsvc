@@ -933,14 +933,82 @@ func Test_Update_DbUpdateError_Returns_InternalServerError(t *testing.T) {
 	jobUpdReq := dto.CreateUpdateJobRequest{
 		SubType: "subtype 2",
 	}
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow(oldJob.Id.String(), oldJob.CorrelationId, oldJob.Name, oldJob.CreatedAt, oldJob.CreatedBy, oldJob.ModifiedAt, oldJob.ModifiedBy, oldJob.Status, oldJob.Source, oldJob.Destination, oldJob.Type, oldJob.SubType, oldJob.Action, oldJob.ActionDetails, oldJob.Progress, oldJob.History, oldJob.ExtraData, oldJob.Priority, oldJob.Rank)
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name",
+		"created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status",
+		"source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			oldJob.Id.String(),
+			oldJob.CorrelationId,
+			oldJob.Name,
+			oldJob.CreatedAt,
+			oldJob.CreatedBy,
+			oldJob.ModifiedAt,
+			oldJob.ModifiedBy,
+			oldJob.Status,
+			oldJob.Source,
+			oldJob.Destination,
+			oldJob.Type,
+			oldJob.SubType,
+			oldJob.Action,
+			oldJob.ActionDetails,
+			oldJob.Progress,
+			oldJob.History,
+			oldJob.ExtraData,
+			oldJob.Priority,
+			oldJob.Rank)
 	mergedJob := mergeJobs(&oldJob, jobUpdReq)
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs(oldJob.Id.String()).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15`, table))).
-		WithArgs(mergedJob.CorrelationId, mergedJob.Name, AnyTime{}, mergedJob.ModifiedBy, mergedJob.Source, mergedJob.Destination, mergedJob.Type, mergedJob.SubType, mergedJob.Action, mergedJob.ActionDetails, mergedJob.History, mergedJob.ExtraData, mergedJob.Priority, mergedJob.Rank, oldJob.Id.String()).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (
+			correlation_id, 
+			name, 
+			modified_at, 
+			modified_by, 
+			source, 
+			destination, 
+			type, 
+			sub_type, 
+			action, 
+			action_details, 
+			history, 
+			extra_data, 
+			priority, 
+			rank) = 
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15`, table))).
+		WithArgs(
+			mergedJob.CorrelationId,
+			mergedJob.Name,
+			AnyTime{},
+			mergedJob.ModifiedBy,
+			mergedJob.Source,
+			mergedJob.Destination,
+			mergedJob.Type,
+			mergedJob.SubType,
+			mergedJob.Action,
+			mergedJob.ActionDetails,
+			mergedJob.History,
+			mergedJob.ExtraData,
+			mergedJob.Priority,
+			mergedJob.Rank,
+			oldJob.Id.String()).
 		WillReturnError(sqlErr)
 
 	job, err := jrd.Update(oldJob.Id.String(), jobUpdReq)
@@ -981,14 +1049,82 @@ func Test_Update_TransactionCommitError_Returns_InternalServerError(t *testing.T
 	jobUpdReq := dto.CreateUpdateJobRequest{
 		SubType: "subtype 2",
 	}
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow(oldJob.Id.String(), oldJob.CorrelationId, oldJob.Name, oldJob.CreatedAt, oldJob.CreatedBy, oldJob.ModifiedAt, oldJob.ModifiedBy, oldJob.Status, oldJob.Source, oldJob.Destination, oldJob.Type, oldJob.SubType, oldJob.Action, oldJob.ActionDetails, oldJob.Progress, oldJob.History, oldJob.ExtraData, oldJob.Priority, oldJob.Rank)
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name",
+		"created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status",
+		"source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			oldJob.Id.String(),
+			oldJob.CorrelationId,
+			oldJob.Name,
+			oldJob.CreatedAt,
+			oldJob.CreatedBy,
+			oldJob.ModifiedAt,
+			oldJob.ModifiedBy,
+			oldJob.Status,
+			oldJob.Source,
+			oldJob.Destination,
+			oldJob.Type,
+			oldJob.SubType,
+			oldJob.Action,
+			oldJob.ActionDetails,
+			oldJob.Progress,
+			oldJob.History,
+			oldJob.ExtraData,
+			oldJob.Priority,
+			oldJob.Rank)
 	mergedJob := mergeJobs(&oldJob, jobUpdReq)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs(oldJob.Id.String()).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15", table))).
-		WithArgs(mergedJob.CorrelationId, mergedJob.Name, AnyTime{}, mergedJob.ModifiedBy, mergedJob.Source, mergedJob.Destination, mergedJob.Type, mergedJob.SubType, mergedJob.Action, mergedJob.ActionDetails, mergedJob.History, mergedJob.ExtraData, mergedJob.Priority, mergedJob.Rank, oldJob.Id.String()).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (
+		correlation_id, 
+		name, 
+		modified_at, 
+		modified_by, 
+		source, 
+		destination, 
+		type, 
+		sub_type, 
+		action, 
+		action_details, 
+		history, 
+		extra_data, 
+		priority, 
+		rank) = 
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15`, table))).
+		WithArgs(
+			mergedJob.CorrelationId,
+			mergedJob.Name,
+			AnyTime{},
+			mergedJob.ModifiedBy,
+			mergedJob.Source,
+			mergedJob.Destination,
+			mergedJob.Type,
+			mergedJob.SubType,
+			mergedJob.Action,
+			mergedJob.ActionDetails,
+			mergedJob.History,
+			mergedJob.ExtraData,
+			mergedJob.Priority,
+			mergedJob.Rank,
+			oldJob.Id.String()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit().WillReturnError(sqlErr)
 
@@ -1029,14 +1165,82 @@ func Test_Update_NoError_Returns_Job(t *testing.T) {
 	jobUpdReq := dto.CreateUpdateJobRequest{
 		SubType: "subtype 2",
 	}
-	rows := sqlmock.NewRows([]string{"id", "correlation_id", "name", "created_at", "created_by", "modified_at", "modified_by", "status", "source", "destination", "type", "sub_type", "action", "action_details", "progress", "history", "extra_data", "priority", "rank"}).
-		AddRow(oldJob.Id.String(), oldJob.CorrelationId, oldJob.Name, oldJob.CreatedAt, oldJob.CreatedBy, oldJob.ModifiedAt, oldJob.ModifiedBy, oldJob.Status, oldJob.Source, oldJob.Destination, oldJob.Type, oldJob.SubType, oldJob.Action, oldJob.ActionDetails, oldJob.Progress, oldJob.History, oldJob.ExtraData, oldJob.Priority, oldJob.Rank)
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"correlation_id",
+		"name",
+		"created_at",
+		"created_by",
+		"modified_at",
+		"modified_by",
+		"status",
+		"source",
+		"destination",
+		"type",
+		"sub_type",
+		"action",
+		"action_details",
+		"progress",
+		"history",
+		"extra_data",
+		"priority",
+		"rank"}).
+		AddRow(
+			oldJob.Id.String(),
+			oldJob.CorrelationId,
+			oldJob.Name,
+			oldJob.CreatedAt,
+			oldJob.CreatedBy,
+			oldJob.ModifiedAt,
+			oldJob.ModifiedBy,
+			oldJob.Status,
+			oldJob.Source,
+			oldJob.Destination,
+			oldJob.Type,
+			oldJob.SubType,
+			oldJob.Action,
+			oldJob.ActionDetails,
+			oldJob.Progress,
+			oldJob.History,
+			oldJob.ExtraData,
+			oldJob.Priority,
+			oldJob.Rank)
 	mergedJob := mergeJobs(&oldJob, jobUpdReq)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT * FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT * FROM %v WHERE id = $1`, table))).
 		WithArgs(oldJob.Id.String()).WillReturnRows(rows)
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (correlation_id, name, modified_at, modified_by, source, destination, type, sub_type, action, action_details, history, extra_data, priority, rank) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15", table))).
-		WithArgs(mergedJob.CorrelationId, mergedJob.Name, AnyTime{}, mergedJob.ModifiedBy, mergedJob.Source, mergedJob.Destination, mergedJob.Type, mergedJob.SubType, mergedJob.Action, mergedJob.ActionDetails, mergedJob.History, mergedJob.ExtraData, mergedJob.Priority, mergedJob.Rank, oldJob.Id.String()).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (
+			correlation_id, 
+			name, 
+			modified_at, 
+			modified_by, 
+			source, 
+			destination, 
+			type, 
+			sub_type, 
+			action, 
+			action_details, 
+			history, 
+			extra_data, 
+			priority, 
+			rank) = 
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) WHERE id = $15`, table))).
+		WithArgs(
+			mergedJob.CorrelationId,
+			mergedJob.Name,
+			AnyTime{},
+			mergedJob.ModifiedBy,
+			mergedJob.Source,
+			mergedJob.Destination,
+			mergedJob.Type,
+			mergedJob.SubType,
+			mergedJob.Action,
+			mergedJob.ActionDetails,
+			mergedJob.History,
+			mergedJob.ExtraData,
+			mergedJob.Priority,
+			mergedJob.Rank,
+			oldJob.Id.String()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
@@ -1072,7 +1276,7 @@ func Test_SetHistoryById_DbSelectError_Returns_InternalServerError(t *testing.T)
 	id := ksuid.New().String()
 	message := "Job History Updated"
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnError(sqlErr)
 
 	err := jrd.SetHistoryById(id, message)
@@ -1092,10 +1296,10 @@ func Test_SetHistoryById_DbUpdateError_Returns_InternalServerError(t *testing.T)
 	rows := sqlmock.NewRows([]string{"history"}).
 		AddRow("2022-01-05T06:07:55Z: Job created\n")
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnRows(rows)
 
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3`, table))).
 		WithArgs(AnyTime{}, AnyString{}, id).WillReturnError(sqlErr)
 
 	err := jrd.SetHistoryById(id, message)
@@ -1115,10 +1319,10 @@ func Test_SetHistoryById_TransactionCommitError_Returns_InternalServerError(t *t
 	rows := sqlmock.NewRows([]string{"history"}).
 		AddRow("2022-01-05T06:07:55Z: Job created\n")
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnRows(rows)
 
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3`, table))).
 		WithArgs(AnyTime{}, AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit().WillReturnError(sqlErr)
 
@@ -1138,10 +1342,10 @@ func Test_SetHistoryById_NoError_Returns_NoError(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"history"}).
 		AddRow("2022-01-05T06:07:55Z: Job created\n")
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT history FROM %v WHERE id = $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT history FROM %v WHERE id = $1`, table))).
 		WithArgs(id).WillReturnRows(rows)
 
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`UPDATE %v SET (modified_at, history) = ($1, $2) WHERE id = $3`, table))).
 		WithArgs(AnyTime{}, AnyString{}, id).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
@@ -1154,7 +1358,7 @@ func Test_DeleteAllJobs_DbError_Returns_InternalServerError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
 	sqlError := sql.ErrConnDone
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v`, table))).
 		WillReturnError(sqlError)
 
 	err := jrd.DeleteAllJobs()
@@ -1167,7 +1371,7 @@ func Test_DeleteAllJobs_DbError_Returns_InternalServerError(t *testing.T) {
 func Test_DeleteAllJobs_NoError_Returns_NoError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v`, table))).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := jrd.DeleteAllJobs()
@@ -1179,7 +1383,7 @@ func Test_CleanupJobs_FailedDeleteFailed_Returns_InternalServerError(t *testing.
 	teardown := setupTest(t)
 	defer teardown()
 	sqlError := sql.ErrConnDone
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE status = 'failed' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnError(sqlError)
 
 	err := jrd.CleanupJobs()
@@ -1193,9 +1397,9 @@ func Test_CleanupJobs_SucceededDeleteFailed_Returns_InternalServerError(t *testi
 	teardown := setupTest(t)
 	defer teardown()
 	sqlError := sql.ErrConnDone
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE status = 'failed' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE status = 'finished' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnError(sqlError)
 
 	err := jrd.CleanupJobs()
@@ -1209,11 +1413,11 @@ func Test_CleanupJobs_InProgressFailed_Returns_InternalServerError(t *testing.T)
 	teardown := setupTest(t)
 	defer teardown()
 	sqlError := sql.ErrConnDone
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE status = 'failed' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE status = 'finished' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnError(sqlError)
 
 	err := jrd.CleanupJobs()
@@ -1226,12 +1430,12 @@ func Test_CleanupJobs_InProgressFailed_Returns_InternalServerError(t *testing.T)
 func Test_CleanupJobs_NoError_Returns_NoError(t *testing.T) {
 	teardown := setupTest(t)
 	defer teardown()
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'failed' AND modified_at < $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE status = 'failed' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf("DELETE FROM %v WHERE status = 'finished' AND modified_at < $1", table))).
+	mock.ExpectExec(regexp.QuoteMeta(fmt.Sprintf(`DELETE FROM %v WHERE status = 'finished' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
 	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
-	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf("SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1", table))).
+	mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`SELECT count(*) FROM %v WHERE status = 'running' AND modified_at < $1`, table))).
 		WithArgs(AnyTime{}).WillReturnRows(countRows)
 
 	err := jrd.CleanupJobs()

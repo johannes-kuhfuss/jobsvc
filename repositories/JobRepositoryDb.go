@@ -254,8 +254,8 @@ func (jrd JobRepositoryDb) Update(id string, jobReq dto.CreateUpdateJobRequest) 
 		return nil, api_error.NewInternalServerError(msg, nil)
 	}
 	updJob := mergeJobs(&oldJob, jobReq)
-	sqlUpdate := fmt.Sprintf(`UPDATE %v SET 
-		(correlation_id, 
+	sqlUpdate := fmt.Sprintf(`UPDATE %v SET (
+			correlation_id, 
 			name, 
 			modified_at, 
 			modified_by, 
