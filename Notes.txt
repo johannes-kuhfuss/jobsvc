@@ -1,6 +1,6 @@
 Investigate context for DB calls
 Indices for DB?
-Web Sockets to update UI
+Web Sockets to update UI (implement with channel; example see section 15)
 Integration tests
 Performance tests (+ large DB size)
 CSRF protection
