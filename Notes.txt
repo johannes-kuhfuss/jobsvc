@@ -6,3 +6,4 @@ Performance tests (+ large DB size)
 CSRF protection
 Let user choose return values
 Move (business) logic from Repo to service?
+https://github.com/fiduswriter/Simple-DataTables

@@ -1,6 +1,8 @@
-{{define "about.page.tmpl" }}
+{{template "base.layout.tmpl" .}}
 
-{{template "header.layout.tmpl" .}}
+{{define "title"}}Job Service - About{{end}}
+
+{{define "content"}}
 
     <div class="container">
         <div class="row">
@@ -30,6 +32,4 @@
         </div>
     </div>
 
-{{template "footer.layout.tmpl" .}}
-
-{{ end }}
+{{end}}
