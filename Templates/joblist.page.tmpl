@@ -1,6 +1,7 @@
-{{define "joblist.page.tmpl"}}
+{{ define "joblist.page.tmpl" }}
 
-{{template "header.layout.tmpl" .}}
+{{ template "header" .}}
+
 
     <div class="table-responsive">
         {{if .jobs }}
@@ -59,6 +60,6 @@
         {{end}}
     </div>
 
-{{template "footer.layout.tmpl" .}}
+{{ template "footer" .}}
 
 {{ end }}
