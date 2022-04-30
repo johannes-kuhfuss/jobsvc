@@ -1,9 +1,16 @@
 Investigate context for DB calls
 Indices for DB?
 Web Sockets to update UI (implement with channel; example see section 15)
-Integration tests
+Integration tests (PACT.io)
 Performance tests (+ large DB size)
 CSRF protection
 Let user choose return values
 Move (business) logic from Repo to service?
 https://github.com/fiduswriter/Simple-DataTables
+
+
+Automate DB deployment & updates
+Comments / whitespaces --> bring back into mental state
+Review history: structured for presentation --> maybe extract to separate table with FK
+Status: State Machine? separate into status code, status string, status commment, also for translation
+Deletion: flag as deleted, filter out; conflicting with history idea
