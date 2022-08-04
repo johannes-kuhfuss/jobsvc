@@ -3,7 +3,7 @@
 ##
 ## Build
 ##
-FROM golang:1.17-alpine AS build
+FROM golang:1.19-alpine AS build
 
 # Setup ENV
 WORKDIR /app
