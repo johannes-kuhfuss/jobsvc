@@ -22,7 +22,7 @@ RUN go build -o /jobsvc
 ##
 ## Deploy
 ##
-FROM alpine:latest
+FROM alpine:3.18.3
 
 WORKDIR /
 
