@@ -17,7 +17,7 @@ import (
 type AppConfig struct {
 	Server struct {
 		Host                 string `envconfig:"SERVER_HOST"`
-		Port                 string `envconfig:"SERVER_PORT" default:"8080"`
+		Port                 string `envconfig:"SERVER_PORT" default:"8081"`
 		TlsPort              string `envconfig:"SERVER_TLS_PORT" default:"8443"`
 		GracefulShutdownTime int    `envconfig:"GRACEFUL_SHUTDOWN_TIME" default:"10"`
 		UseTls               bool   `envconfig:"USE_TLS" default:"false"`
