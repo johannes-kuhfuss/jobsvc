@@ -61,8 +61,8 @@ func StartApp() {
 	<-appEnd
 	cleanUp()
 
-	if srvErr := server.Shutdown(ctx); err != nil {
-		logger.Error("Graceful shutdown failed", srvErr)
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Error("Graceful shutdown failed", err)
 	} else {
 		logger.Info("Graceful shutdown finished")
 	}
@@ -150,7 +150,8 @@ func wireApp() {
 }
 
 func mapUrls() {
-	api := cfg.RunTime.Router.Group("/jobs", validateAuth(), prometheusMetrics())
+	//api := cfg.RunTime.Router.Group("/jobs", validateAuth(), prometheusMetrics())
+	api := cfg.RunTime.Router.Group("/jobs", prometheusMetrics())
 	{
 		api.POST("/", jobHandler.CreateJob)
 		api.GET("/", jobHandler.GetAllJobs)
